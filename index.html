@@ -6,124 +6,141 @@
     <title>新森元生产日报统计表</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
+        /* ===== 全局 ===== */
         * { box-sizing: border-box; font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; }
-        body { background: #eef2f7; margin: 20px; padding: 0; }
+        body { background: #eef2f7; margin: 0; padding: 10px; }
         .container {
             max-width: 1500px; margin: 0 auto; background: #ffffff;
             border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            padding: 24px 28px 32px;
+            padding: 16px 16px 24px;
         }
+        /* 头部 */
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 3px solid #1e3a8a; padding-bottom: 14px; margin-bottom: 6px;
+            border-bottom: 3px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 6px;
             flex-wrap: wrap;
         }
         .header h1 {
-            margin: 0; font-size: 26px; color: #0b1e4a;
+            margin: 0; font-size: 20px; color: #0b1e4a;
         }
         .header h1 small {
-            font-size: 16px; font-weight: 400; color: #3b5a8a; margin-left: 12px;
+            font-size: 14px; font-weight: 400; color: #3b5a8a; margin-left: 8px;
+            display: block;
         }
-        .header-right { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .header-right {
+            display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;
+        }
         .btn {
-            border: none; padding: 8px 18px; border-radius: 6px; font-size: 14px;
+            border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px;
             font-weight: 500; cursor: pointer; transition: 0.2s;
-            display: inline-flex; align-items: center; gap: 6px;
+            display: inline-flex; align-items: center; gap: 4px;
+            white-space: nowrap;
         }
         .btn-primary { background: #1e3a8a; color: #fff; }
-        .btn-primary:hover { background: #172e6b; }
         .btn-success { background: #0f7b3a; color: #fff; }
-        .btn-success:hover { background: #0b642e; }
         .btn-danger { background: #b91c1c; color: #fff; }
-        .btn-danger:hover { background: #991616; }
         .btn-outline { background: #fff; color: #1e3a8a; border: 1px solid #1e3a8a; }
-        .btn-outline:hover { background: #f0f4ff; }
         .btn-warning { background: #f59e0b; color: #fff; }
-        .btn-warning:hover { background: #d97706; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
         .file-input-wrap { position: relative; display: inline-block; }
         .file-input-wrap input[type="file"] {
             position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;
         }
         .report-date {
-            text-align: left; font-size: 14px; color: #3b5a8a; margin-bottom: 12px;
+            font-size: 14px; color: #3b5a8a; margin: 6px 0 12px;
             border-bottom: 1px solid #dde3ed; padding-bottom: 6px;
         }
+
+        /* 设置面板 - 移动端优化 */
         .settings-panel {
             background: #f8fafd; border: 1px solid #dde3ed; border-radius: 8px;
-            padding: 16px 20px; margin-bottom: 16px;
-            display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px;
+            padding: 12px 16px; margin-bottom: 12px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px;
         }
         .settings-group {
-            display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+            display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
         }
         .settings-group label {
-            font-weight: 600; color: #1a2a4a; font-size: 14px; white-space: nowrap;
+            font-weight: 600; color: #1a2a4a; font-size: 13px; white-space: nowrap;
         }
         .settings-group input[type="time"] {
-            padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px;
-            font-size: 14px; width: 110px; min-width: 100px;
+            padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 4px;
+            font-size: 14px; width: 80px; min-width: 70px;
         }
         .settings-group input[type="number"] {
-            padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px;
-            font-size: 14px; width: 70px; min-width: 60px;
+            padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 4px;
+            font-size: 14px; width: 60px; min-width: 50px;
         }
-        .settings-group span { white-space: nowrap; font-size: 14px; }
+        .settings-group span { white-space: nowrap; font-size: 13px; }
         .settings-panel .btn-save {
             background: #1e3a8a; color: #fff; border: none;
-            padding: 6px 18px; border-radius: 4px; cursor: pointer; font-size: 14px; white-space: nowrap;
+            padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 13px;
         }
-        .settings-panel .btn-save:hover { background: #172e6b; }
-        .temp-hint {
-            font-size: 12px; color: #b91c1c; font-weight: 500;
-            background: #fee2e2; padding: 2px 10px; border-radius: 4px; white-space: nowrap;
+        .temp-hint, .season-hint {
+            font-size: 11px; padding: 0 6px; border-radius: 3px;
+            white-space: nowrap;
         }
-        .season-hint {
-            font-size: 12px; color: #0b642e; font-weight: 500;
-            background: #d1fae5; padding: 2px 10px; border-radius: 4px; white-space: nowrap;
-        }
+        .temp-hint { color: #b91c1c; background: #fee2e2; }
+        .season-hint { color: #0b642e; background: #d1fae5; }
+
+        /* 机台管理 - 移动优化 */
         .machine-panel {
             background: #f8fafd; border: 1px solid #dde3ed; border-radius: 8px;
-            padding: 12px 20px; margin-bottom: 16px;
-            display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px;
+            padding: 10px 16px; margin-bottom: 12px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;
         }
         .machine-panel .machine-list {
-            display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center;
+            display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center;
         }
         .machine-panel .machine-item {
-            display: inline-flex; align-items: center; gap: 4px;
-            background: #e9edf4; padding: 2px 8px 2px 12px; border-radius: 12px; font-size: 13px;
+            display: inline-flex; align-items: center; gap: 2px;
+            background: #e9edf4; padding: 0 6px 0 10px; border-radius: 12px; font-size: 12px;
         }
         .machine-panel .machine-item .del-mac {
-            cursor: pointer; color: #b91c1c; font-weight: bold; margin-left: 4px;
+            cursor: pointer; color: #b91c1c; font-weight: bold; margin-left: 2px;
         }
-        .machine-panel .machine-item .del-mac:hover { color: #7f1313; }
         .machine-panel input {
-            padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; width: 80px;
+            padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;
+            width: 60px;
         }
-        .machine-panel input[type="number"] { width: 70px; }
+        .machine-panel input[type="number"] { width: 50px; }
         .machine-panel .btn-add-mac {
             background: #1e3a8a; color: #fff; border: none;
-            padding: 4px 14px; border-radius: 4px; cursor: pointer; font-size: 14px;
+            padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 13px;
         }
-        .machine-panel .btn-add-mac:hover { background: #172e6b; }
+
+        /* 汇总 - 移动用网格 */
         .summary-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 14px; background: #f8fafd; border-radius: 10px;
-            padding: 16px 20px; margin-bottom: 20px; border: 1px solid #dde3ed;
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 8px; background: #f8fafd; border-radius: 10px;
+            padding: 12px 16px; margin-bottom: 16px; border: 1px solid #dde3ed;
         }
-        .summary-item .label { font-size: 13px; color: #546a84; }
-        .summary-item .value { font-size: 22px; font-weight: 700; color: #0b1e4a; }
-        .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #dde3ed; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: auto; }
+        .summary-item .label { font-size: 11px; color: #546a84; }
+        .summary-item .value { font-size: 18px; font-weight: 700; color: #0b1e4a; }
+
+        /* 表格 - 移动端横向滚动，隐藏部分列 */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: 8px; border: 1px solid #dde3ed;
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            width: 100%; border-collapse: collapse; font-size: 12px;
+            table-layout: auto; min-width: 700px;
+        }
         th {
-            background: #e9edf4; color: #1a2a4a; font-weight: 600; padding: 10px 8px;
+            background: #e9edf4; color: #1a2a4a; font-weight: 600; padding: 6px 4px;
             border: 1px solid #cbd5e1; text-align: center; white-space: nowrap;
             position: sticky; top: 0; z-index: 2;
         }
-        td { padding: 6px 4px; border: 1px solid #cbd5e1; text-align: center; vertical-align: middle; background: #fff; }
+        td {
+            padding: 4px 2px; border: 1px solid #cbd5e1; text-align: center; vertical-align: middle;
+            background: #fff;
+        }
         td input, td select {
-            width: 100%; padding: 6px 4px; border: 1px solid #cbd5e1; border-radius: 4px;
-            font-size: 14px; background: #fff; box-sizing: border-box;
+            width: 100%; padding: 6px 2px; border: 1px solid #cbd5e1; border-radius: 4px;
+            font-size: 13px; background: #fff; box-sizing: border-box;
+            min-height: 32px;
         }
         td input[readonly] {
             background: #f4f6f9; cursor: not-allowed;
@@ -131,25 +148,35 @@
         td select option.temp-option { color: #b91c1c; background: #fee2e2; }
         td select option.season-option { color: #0b642e; background: #d1fae5; }
         .row-del {
-            cursor: pointer; color: #b91c1c; font-weight: bold; font-size: 20px;
-            background: none; border: none; padding: 0 6px;
+            cursor: pointer; color: #b91c1c; font-weight: bold; font-size: 18px;
+            background: none; border: none; padding: 0 4px;
         }
-        .row-del:hover { color: #7f1313; }
         .status-badge {
-            display: inline-block; padding: 2px 12px; border-radius: 20px;
-            font-size: 12px; font-weight: 600;
+            display: inline-block; padding: 0 8px; border-radius: 12px;
+            font-size: 11px; font-weight: 600;
         }
         .badge-ok { background: #d1fae5; color: #0b642e; }
         .badge-warn { background: #fef3c7; color: #92400e; }
         .badge-fail { background: #fde2e2; color: #991616; }
-        .footer-tip {
-            margin-top: 16px; font-size: 13px; color: #546a84;
-            text-align: right; border-top: 1px solid #e9edf4; padding-top: 14px;
+
+        /* 移动端隐藏不常用列 */
+        @media (max-width: 600px) {
+            .hide-mobile { display: none; }
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+            .header h1 { font-size: 18px; }
+            .header h1 small { font-size: 12px; }
+            .settings-group input[type="time"] { width: 70px; }
+            .settings-group input[type="number"] { width: 50px; }
+            .machine-panel input { width: 50px; }
+            .machine-panel input[type="number"] { width: 45px; }
+            table { font-size: 11px; min-width: 600px; }
+            td input, td select { font-size: 12px; padding: 4px 2px; min-height: 28px; }
+            .btn { font-size: 11px; padding: 4px 8px; }
         }
-        @media (max-width: 900px) {
-            .settings-panel, .machine-panel { flex-direction: column; align-items: stretch; }
-            .settings-group { flex-wrap: wrap; }
-            .settings-group input[type="time"] { width: 100%; min-width: unset; }
+
+        .footer-tip {
+            margin-top: 12px; font-size: 12px; color: #546a84;
+            text-align: right; border-top: 1px solid #e9edf4; padding-top: 10px;
         }
     </style>
 </head>
@@ -157,80 +184,78 @@
 <div class="container">
     <!-- 头部 -->
     <div class="header">
-        <h1>📋 新森元生产日报统计表 <small>安徽新森元环保科技有限公司</small></h1>
+        <h1>📋 新森元日报 <small>安徽新森元环保科技</small></h1>
         <div class="header-right">
-            <button class="btn btn-warning" onclick="backupData()">📤 备份数据</button>
+            <button class="btn btn-warning btn-sm" onclick="backupData()">📤 备份</button>
             <div class="file-input-wrap">
-                <button class="btn btn-outline">📥 恢复数据</button>
+                <button class="btn btn-outline btn-sm">📥 恢复</button>
                 <input type="file" accept=".json" onchange="restoreData(event)">
             </div>
-            <button class="btn btn-outline" onclick="downloadTemplate()">📄 模板</button>
+            <button class="btn btn-outline btn-sm" onclick="downloadTemplate()">📄 模板</button>
             <div class="file-input-wrap">
-                <button class="btn btn-outline">📂 导入 Excel</button>
+                <button class="btn btn-outline btn-sm">📂 导入</button>
                 <input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
             </div>
-            <button class="btn btn-success" onclick="exportExcel()">📥 导出报表</button>
-            <button class="btn btn-primary" onclick="addRow()">➕ 添加行</button>
-            <button class="btn btn-danger" onclick="clearAll()">🗑️ 清空</button>
+            <button class="btn btn-success btn-sm" onclick="exportExcel()">📥 导出</button>
+            <button class="btn btn-primary btn-sm" onclick="addRow()">➕</button>
+            <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑️</button>
         </div>
     </div>
     <div class="report-date">
-        📅 报告日期：<span id="todayLabel"></span> ｜ 数据实时保存
+        📅 <span id="todayLabel"></span> ｜ 数据实时保存
     </div>
 
-    <!-- 班次默认设置（白班/夜班/寒暑） -->
+    <!-- 班次默认设置 -->
     <div class="settings-panel">
         <div class="settings-group">
-            <label>🟦 白班默认</label>
+            <label>🟦白</label>
             <input type="time" id="dayStart" value="08:00">
             <span>～</span>
             <input type="time" id="dayEnd" value="17:00">
-            <span>休息</span>
-            <input type="number" id="dayRest" value="60" step="1" min="0"> <span>分钟</span>
+            <span>休</span>
+            <input type="number" id="dayRest" value="60" step="1" min="0" style="width:50px;"> <span>分</span>
         </div>
         <div class="settings-group">
-            <label>🟩 夜班默认</label>
+            <label>🟩夜</label>
             <input type="time" id="nightStart" value="20:00">
             <span>～</span>
             <input type="time" id="nightEnd" value="05:00">
-            <span>休息</span>
-            <input type="number" id="nightRest" value="30" step="1" min="0"> <span>分钟</span>
+            <span>休</span>
+            <input type="number" id="nightRest" value="30" step="1" min="0" style="width:50px;"> <span>分</span>
         </div>
         <div class="settings-group">
-            <label>🟧 寒暑默认</label>
+            <label>🟧寒暑</label>
             <input type="time" id="seasonStart" value="09:00">
             <span>～</span>
             <input type="time" id="seasonEnd" value="18:00">
-            <span>休息</span>
-            <input type="number" id="seasonRest" value="60" step="1" min="0"> <span>分钟</span>
+            <span>休</span>
+            <input type="number" id="seasonRest" value="60" step="1" min="0" style="width:50px;"> <span>分</span>
         </div>
-        <button class="btn-save" onclick="saveSettings()">保存设置</button>
-        <span style="font-size:13px; color:#546a84; white-space:nowrap;">
-            ⚡ 选班次自动填充；选「临时」自由录入
-            <span class="season-hint">寒暑有默认时间</span>
+        <button class="btn-save" onclick="saveSettings()">保存</button>
+        <span style="font-size:11px; color:#546a84;">
+            <span class="season-hint">寒暑</span>
             <span class="temp-hint">临时=手动</span>
         </span>
     </div>
 
     <!-- 机台管理 -->
     <div class="machine-panel">
-        <span style="font-weight:600; color:#1a2a4a;">🛠️ 机台管理</span>
+        <span style="font-weight:600; font-size:13px;">🛠️</span>
         <div class="machine-list" id="machineList"></div>
-        <div style="display:flex; gap:6px; align-items:center;">
-            <input type="text" id="newMachine" placeholder="机台号" style="width:80px;">
-            <input type="number" id="newSpeed" placeholder="速度" style="width:70px;" step="1" min="0">
+        <div style="display:flex; gap:4px; align-items:center;">
+            <input type="text" id="newMachine" placeholder="号" style="width:50px;">
+            <input type="number" id="newSpeed" placeholder="速" style="width:45px;" step="1" min="0">
             <button class="btn-add-mac" onclick="addMachine()">添加</button>
         </div>
-        <span style="font-size:12px; color:#546a84;">（机台号下拉选择后自动带出速度）</span>
     </div>
 
     <!-- 汇总 -->
     <div class="summary-grid">
-        <div class="summary-item"><span class="label">📦 总实际产量</span><span class="value" id="sumActual">0</span></div>
-        <div class="summary-item"><span class="label">📐 总理论产量</span><span class="value" id="sumTheory">0</span></div>
-        <div class="summary-item"><span class="label">📈 平均效率</span><span class="value" id="avgEff">0%</span></div>
-        <div class="summary-item"><span class="label">⚠️ 总差额</span><span class="value" id="sumDiff">0</span></div>
-        <div class="summary-item"><span class="label">✅ 达标行数 (≥95%)</span><span class="value" id="cntPass">0</span></div>
+        <div class="summary-item"><span class="label">总实际</span><span class="value" id="sumActual">0</span></div>
+        <div class="summary-item"><span class="label">总理论</span><span class="value" id="sumTheory">0</span></div>
+        <div class="summary-item"><span class="label">平均效率</span><span class="value" id="avgEff">0%</span></div>
+        <div class="summary-item"><span class="label">总差额</span><span class="value" id="sumDiff">0</span></div>
+        <div class="summary-item"><span class="label">达标行数</span><span class="value" id="cntPass">0</span></div>
     </div>
 
     <!-- 表格 -->
@@ -238,54 +263,47 @@
         <table>
             <thead>
                 <tr>
-                    <th style="min-width:90px;">日期</th>
-                    <th style="min-width:80px;">班次</th>
-                    <th style="min-width:70px;">机台号</th>
-                    <th style="min-width:100px;">品名</th>
-                    <th style="min-width:70px;">开机</th>
-                    <th style="min-width:70px;">关机</th>
-                    <th style="min-width:70px;">休息</th>
-                    <th style="min-width:70px;">维修时长</th>
-                    <th style="min-width:70px;">运行分钟</th>
-                    <th style="min-width:80px;">速度(个/分)</th>
-                    <th style="min-width:90px;">理论产量</th>
-                    <th style="min-width:90px;">实际产量</th>
-                    <th style="min-width:60px;">效率</th>
-                    <th style="min-width:80px;">差额</th>
-                    <th style="min-width:70px;">状态</th>
-                    <th style="min-width:40px;">操作</th>
+                    <th>日期</th>
+                    <th>班次</th>
+                    <th>机台</th>
+                    <th>品名</th>
+                    <th>开机</th>
+                    <th>关机</th>
+                    <th>休息</th>
+                    <th class="hide-mobile">维修</th>
+                    <th class="hide-mobile">运行</th>
+                    <th>速度</th>
+                    <th>理论</th>
+                    <th>实际</th>
+                    <th>效率</th>
+                    <th class="hide-mobile">差额</th>
+                    <th>状态</th>
+                    <th>✕</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
     <div class="footer-tip">
-        💡 修改任意数据自动保存。机台号下拉选择后自动带出速度，可手动调整。<br>
-        🛠️ 「维修时长」输入后自动从运行分钟中扣除，使理论产量更精准。<br>
-        🔒 仅「临时」班次允许修改开机/关机/休息/速度，其他班次自动填充且只读。<br>
-        📤 使用“备份数据”可导出全部数据，在另一设备“恢复数据”即可同步。
+        💡 仅「临时」可修改开机/关机/休息/速度 | 📤 备份/恢复同步数据
     </div>
 </div>
 
 <script>
-    // ==================== 模块 1: 工具函数 ====================
+    // ==================== 工具 ====================
     function getTodayStr() {
         const d = new Date();
-        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2,
-        '0');
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
-
     function parseTimeToMinutes(str) {
         if (!str) return null;
         const parts = str.split(':');
         if (parts.length === 2) {
-            let h = parseInt(parts[0]),
-                m = parseInt(parts[1]);
+            let h = parseInt(parts[0]), m = parseInt(parts[1]);
             if (!isNaN(h) && !isNaN(m) && h >= 0 && h <= 23 && m >= 0 && m <= 59) return h * 60 + m;
         }
         return null;
     }
-
     function calcMinutes(startStr, endStr, restMinutes, repairMinutes) {
         const s = parseTimeToMinutes(startStr);
         const e = parseTimeToMinutes(endStr);
@@ -297,7 +315,7 @@
         return Math.max(0, diff);
     }
 
-    // ==================== 模块 2: 默认班次设置 ====================
+    // ==================== 设置 ====================
     let defaultSettings = {
         day: { start: '08:00', end: '17:00', rest: 60 },
         night: { start: '20:00', end: '05:00', rest: 30 },
@@ -307,10 +325,7 @@
     function loadSettings() {
         const saved = localStorage.getItem('shiftDefaults');
         if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                defaultSettings = parsed;
-            } catch (e) {}
+            try { defaultSettings = JSON.parse(saved); } catch (e) {}
         }
         document.getElementById('dayStart').value = defaultSettings.day.start;
         document.getElementById('dayEnd').value = defaultSettings.day.end;
@@ -334,7 +349,7 @@
         defaultSettings.season.end = document.getElementById('seasonEnd').value || '18:00';
         defaultSettings.season.rest = parseInt(document.getElementById('seasonRest').value) || 0;
         localStorage.setItem('shiftDefaults', JSON.stringify(defaultSettings));
-        alert('默认班次时间已保存！');
+        alert('默认时间已保存！');
     }
 
     function getDefaultTime(shift) {
@@ -345,9 +360,8 @@
         return null;
     }
 
-    // ==================== 模块 3: 机台管理 ====================
+    // ==================== 机台 ====================
     let machineList = [];
-
     function loadMachines() {
         const stored = localStorage.getItem('machineList');
         if (stored) {
@@ -355,65 +369,48 @@
         }
         if (!machineList.length) {
             machineList = [
-                { id: '18', speed: 110 },
-                { id: '17', speed: 110 },
-                { id: '22', speed: 100 },
-                { id: '27', speed: 100 },
-                { id: '1', speed: 110 },
-                { id: 'A', speed: 45 },
-                { id: 'B', speed: 45 }
+                { id: '18', speed: 110 }, { id: '17', speed: 110 },
+                { id: '22', speed: 100 }, { id: '27', speed: 100 },
+                { id: '1', speed: 110 }, { id: 'A', speed: 45 }, { id: 'B', speed: 45 }
             ];
             saveMachines();
         }
         renderMachineList();
     }
-
-    function saveMachines() {
-        localStorage.setItem('machineList', JSON.stringify(machineList));
-    }
-
+    function saveMachines() { localStorage.setItem('machineList', JSON.stringify(machineList)); }
     function renderMachineList() {
         const container = document.getElementById('machineList');
         container.innerHTML = machineList.map(m =>
             `<span class="machine-item">${m.id} (${m.speed}) <span class="del-mac" onclick="deleteMachine('${m.id}')">✕</span></span>`
         ).join('');
     }
-
     function addMachine() {
-        const idInput = document.getElementById('newMachine');
-        const speedInput = document.getElementById('newSpeed');
-        const id = idInput.value.trim();
-        const speed = parseFloat(speedInput.value);
+        const id = document.getElementById('newMachine').value.trim();
+        const speed = parseFloat(document.getElementById('newSpeed').value);
         if (!id) { alert('请输入机台号'); return; }
         if (isNaN(speed) || speed < 0) { alert('请输入有效速度'); return; }
-        if (machineList.some(m => m.id === id)) {
-            alert('该机台已存在，请勿重复添加');
-            return;
-        }
+        if (machineList.some(m => m.id === id)) { alert('已存在'); return; }
         machineList.push({ id, speed });
         saveMachines();
         renderMachineList();
-        idInput.value = '';
-        speedInput.value = '';
+        document.getElementById('newMachine').value = '';
+        document.getElementById('newSpeed').value = '';
         renderTable();
     }
-
     function deleteMachine(id) {
-        if (!confirm(`确定删除机台 ${id} 吗？`)) return;
+        if (!confirm(`删除机台 ${id} ？`)) return;
         machineList = machineList.filter(m => m.id !== id);
         saveMachines();
         renderMachineList();
         renderTable();
     }
-
     function getMachineSpeed(id) {
         const found = machineList.find(m => m.id === id);
         return found ? found.speed : null;
     }
 
-    // ==================== 模块 4: 日报数据管理 ====================
+    // ==================== 数据 ====================
     let rowsData = [];
-
     function loadData() {
         const stored = localStorage.getItem('dailyReportData');
         if (stored) {
@@ -421,26 +418,19 @@
         }
         if (!rowsData || !rowsData.length) {
             rowsData = [
-                { date: '2026-07-24', shift: '白班', machine: '18', product: '8oz', startTime: '08:00',
-                    endTime: '17:00', rest: 60, repair: 0, speed: 110, actual: 50693 },
-                { date: '2026-07-24', shift: '夜班', machine: '18', product: '8oz', startTime: '20:00',
-                    endTime: '05:00', rest: 30, repair: 15, speed: 110, actual: 48000 },
-                { date: '2026-07-25', shift: '寒暑', machine: '22', product: '12白色', startTime: '09:00',
-                    endTime: '18:00', rest: 60, repair: 10, speed: 100, actual: 62014 },
-                { date: '2026-07-25', shift: '临时', machine: '23', product: '7.5', startTime: '10:00',
-                    endTime: '15:00', rest: 30, repair: 0, speed: 90, actual: 30000 }
+                { date: '2026-07-24', shift: '白班', machine: '18', product: '8oz', startTime: '08:00', endTime: '17:00', rest: 60, repair: 0, speed: 110, actual: 50693 },
+                { date: '2026-07-24', shift: '夜班', machine: '18', product: '8oz', startTime: '20:00', endTime: '05:00', rest: 30, repair: 15, speed: 110, actual: 48000 },
+                { date: '2026-07-25', shift: '寒暑', machine: '22', product: '12白色', startTime: '09:00', endTime: '18:00', rest: 60, repair: 10, speed: 100, actual: 62014 },
+                { date: '2026-07-25', shift: '临时', machine: '23', product: '7.5', startTime: '10:00', endTime: '15:00', rest: 30, repair: 0, speed: 90, actual: 30000 }
             ];
         }
         renderTable();
         updateSummary();
         saveData();
     }
+    function saveData() { localStorage.setItem('dailyReportData', JSON.stringify(rowsData)); }
 
-    function saveData() {
-        localStorage.setItem('dailyReportData', JSON.stringify(rowsData));
-    }
-
-    // ==================== 模块 5: 表格渲染 ====================
+    // ==================== 渲染 ====================
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         let html = '';
@@ -451,13 +441,11 @@
             const actual = parseFloat(row.actual) || 0;
             const eff = theory ? (actual / theory) : 0;
             const diff = theory - actual;
-            let statusText = '',
-                statusClass = '';
-            if (theory === 0 && actual === 0) { statusText = '⏸️ 待产';
-                statusClass = 'badge-warn'; } else if (eff >= 0.95) { statusText = '✅ 达标';
-                statusClass = 'badge-ok'; } else if (eff >= 0.80) { statusText = '⚠️ 偏低';
-                statusClass = 'badge-warn'; } else { statusText = '❌ 欠产';
-                statusClass = 'badge-fail'; }
+            let statusText = '', statusClass = '';
+            if (theory === 0 && actual === 0) { statusText = '⏸️'; statusClass = 'badge-warn'; }
+            else if (eff >= 0.95) { statusText = '✅'; statusClass = 'badge-ok'; }
+            else if (eff >= 0.80) { statusText = '⚠️'; statusClass = 'badge-warn'; }
+            else { statusText = '❌'; statusClass = 'badge-fail'; }
 
             const shiftOpts = ['白班', '夜班', '寒暑', '临时'].map(s => {
                 const selected = (row.shift === s) ? 'selected' : '';
@@ -484,21 +472,21 @@
                 <td><select onchange="onShiftChange(${idx}, this.value)">${shiftOpts}</select></td>
                 <td>
                     <select onchange="onMachineChange(${idx}, this.value)">
-                        <option value="">-- 选择 --</option>
+                        <option value="">--</option>
                         ${machineOptionsStr}
                     </select>
                 </td>
                 <td><input type="text" value="${row.product||''}" onchange="updateRow(${idx},'product',this.value)" placeholder="品名"></td>
                 <td><input type="time" value="${row.startTime||''}" onchange="updateRow(${idx},'startTime',this.value)" ${isReadonly}></td>
                 <td><input type="time" value="${row.endTime||''}" onchange="updateRow(${idx},'endTime',this.value)" ${isReadonly}></td>
-                <td><input type="number" value="${row.rest||0}" onchange="updateRow(${idx},'rest',this.value)" step="1" min="0" style="width:70px;" ${isReadonly}></td>
-                <td><input type="number" value="${row.repair||0}" onchange="updateRow(${idx},'repair',this.value)" step="1" min="0" style="width:70px;"></td>
-                <td><input type="number" readonly value="${minutes}" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
-                <td><input type="number" value="${row.speed||''}" onchange="updateRow(${idx},'speed',this.value)" step="1" min="0" style="width:70px;" ${isReadonly}></td>
-                <td><input type="number" readonly value="${theory}" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
-                <td><input type="number" value="${row.actual||''}" onchange="updateRow(${idx},'actual',this.value)" step="1" min="0" style="width:90px;"></td>
+                <td><input type="number" value="${row.rest||0}" onchange="updateRow(${idx},'rest',this.value)" step="1" min="0" style="width:60px;" ${isReadonly}></td>
+                <td class="hide-mobile"><input type="number" value="${row.repair||0}" onchange="updateRow(${idx},'repair',this.value)" step="1" min="0" style="width:60px;"></td>
+                <td class="hide-mobile"><input type="number" readonly value="${minutes}" style="background:#f4f6f9;width:60px;"></td>
+                <td><input type="number" value="${row.speed||''}" onchange="updateRow(${idx},'speed',this.value)" step="1" min="0" style="width:60px;" ${isReadonly}></td>
+                <td><input type="number" readonly value="${theory}" style="background:#f4f6f9;width:70px;"></td>
+                <td><input type="number" value="${row.actual||''}" onchange="updateRow(${idx},'actual',this.value)" step="1" min="0" style="width:70px;"></td>
                 <td>${(eff*100).toFixed(1)}%</td>
-                <td>${diff}</td>
+                <td class="hide-mobile">${diff}</td>
                 <td><span class="status-badge ${statusClass}">${statusText}${seasonFlag}${tempFlag}</span></td>
                 <td><button class="row-del" onclick="deleteRow(${idx})">✕</button></td>
             </tr>`;
@@ -590,9 +578,7 @@
     }
 
     function updateSummary() {
-        let sumActual = 0,
-            sumTheory = 0,
-            cntPass = 0;
+        let sumActual = 0, sumTheory = 0, cntPass = 0;
         rowsData.forEach(row => {
             const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
             const theory = Math.round(minutes * (parseFloat(row.speed) || 0));
@@ -605,12 +591,11 @@
         document.getElementById('sumTheory').textContent = sumTheory.toLocaleString();
         const avgEff = sumTheory ? (sumActual / sumTheory) : 0;
         document.getElementById('avgEff').textContent = (avgEff * 100).toFixed(1) + '%';
-        const diff = sumTheory - sumActual;
-        document.getElementById('sumDiff').textContent = diff.toLocaleString();
+        document.getElementById('sumDiff').textContent = (sumTheory - sumActual).toLocaleString();
         document.getElementById('cntPass').textContent = cntPass;
     }
 
-    // ==================== 模块 6: 备份与恢复（全量数据） ====================
+    // ==================== 备份/恢复 ====================
     function backupData() {
         const data = {
             version: '1.0',
@@ -640,17 +625,13 @@
                     alert('无效的备份文件');
                     return;
                 }
-                if (!confirm('恢复数据将覆盖当前所有数据，确定继续吗？')) return;
-                // 恢复设置
+                if (!confirm('恢复将覆盖当前所有数据，确定？')) return;
                 defaultSettings = data.defaultSettings;
                 localStorage.setItem('shiftDefaults', JSON.stringify(defaultSettings));
-                // 恢复机台
                 machineList = data.machineList;
                 localStorage.setItem('machineList', JSON.stringify(machineList));
-                // 恢复日报数据
                 rowsData = data.rowsData;
                 localStorage.setItem('dailyReportData', JSON.stringify(rowsData));
-                // 刷新界面
                 loadSettings();
                 renderMachineList();
                 renderTable();
@@ -660,10 +641,10 @@
             }
         };
         reader.readAsText(file);
-        event.target.value = ''; // 重置 input
+        event.target.value = '';
     }
 
-    // ==================== 模块 7: 导入导出 Excel ====================
+    // ==================== 导入/导出（全新 XLSX 方式） ====================
     function downloadTemplate() {
         const wb = XLSX.utils.book_new();
         const data = [
@@ -674,8 +655,7 @@
             ['2026-07-25', '临时', '23', '7.5', '10:00', '15:00', 30, 0, 90, 30000]
         ];
         const ws = XLSX.utils.aoa_to_sheet(data);
-        ws['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 10 }, { wch: 10 },
-        { wch: 12 }, { wch: 12 }, { wch: 14 }];
+        ws['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 14 }];
         XLSX.utils.book_append_sheet(wb, ws, '模板');
         const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
         const blob = new Blob([wbout], { type: 'application/octet-stream' });
@@ -792,15 +772,45 @@
         e.target.value = '';
     }
 
+    // ==================== 导出（改用 SheetJS 生成标准 XLSX） ====================
     function exportExcel() {
         if (rowsData.length === 0) {
             alert('没有数据可导出');
             return;
         }
 
-        let sumActual = 0,
-            sumTheory = 0,
-            cntPass = 0;
+        // 构建数据数组（包含表头 + 数据行 + 汇总行）
+        const headers = ['日期', '班次', '机台号', '品名', '开机', '关机', '休息', '维修时长', '运行分钟', '速度', '理论产量', '实际产量', '效率', '差额', '状态'];
+        const rows = rowsData.map(row => {
+            const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
+            const speed = parseFloat(row.speed) || 0;
+            const theory = Math.round(minutes * speed);
+            const actual = parseFloat(row.actual) || 0;
+            const eff = theory ? (actual / theory * 100) : 0;
+            const diff = theory - actual;
+            let status = eff >= 95 ? '达标' : (eff >= 80 ? '偏低' : '欠产');
+            if (theory === 0 && actual === 0) status = '待产';
+            return [
+                row.date || '',
+                row.shift || '',
+                row.machine || '',
+                row.product || '',
+                row.startTime || '',
+                row.endTime || '',
+                row.rest || 0,
+                row.repair || 0,
+                minutes,
+                speed,
+                theory,
+                actual,
+                eff.toFixed(1) + '%',
+                diff,
+                status
+            ];
+        });
+
+        // 计算汇总
+        let sumActual = 0, sumTheory = 0, cntPass = 0;
         rowsData.forEach(row => {
             const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
             const theory = Math.round(minutes * (parseFloat(row.speed) || 0));
@@ -812,97 +822,38 @@
         const avgEff = sumTheory ? (sumActual / sumTheory * 100) : 0;
         const totalDiff = sumTheory - sumActual;
 
-        let tableRows = '';
-        rowsData.forEach((row, idx) => {
-            const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
-            const theory = Math.round(minutes * (parseFloat(row.speed) || 0));
-            const actual = parseFloat(row.actual) || 0;
-            const eff = theory ? (actual / theory * 100) : 0;
-            const diff = theory - actual;
-            let status = eff >= 95 ? '达标' : (eff >= 80 ? '偏低' : '欠产');
-            if (theory === 0 && actual === 0) status = '待产';
-            const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafd';
-            tableRows += `<tr style="height: auto; background:${bg}; mso-height-rule: auto;">
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.date||''}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.shift||''}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.machine||''}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.product||''}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.startTime||''}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.endTime||''}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.rest||0}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.repair||0}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${minutes}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.speed||0}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;font-weight:600;mso-line-height-rule:exactly;">${theory}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;font-weight:600;mso-line-height-rule:exactly;">${actual}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${eff.toFixed(1)}%</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;font-weight:600;mso-line-height-rule:exactly;">${diff}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${status}</td>
-            </tr>`;
+        const summaryRow = [
+            '📊 合计 / 平均', '', '', '', '', '', '', '',
+            '',
+            '—',
+            sumTheory,
+            sumActual,
+            avgEff.toFixed(1) + '%',
+            totalDiff,
+            '达标 ' + cntPass + ' 行'
+        ];
+
+        // 合并所有行
+        const dataForExport = [headers, ...rows, summaryRow];
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(dataForExport);
+        // 设置列宽
+        ws['!cols'] = headers.map((_, i) => {
+            // 根据列内容适当调整宽度
+            const maxLen = dataForExport.reduce((max, row) => {
+                const val = row[i] !== undefined ? String(row[i]).length : 0;
+                return Math.max(max, val);
+            }, 0);
+            return { wch: Math.min(Math.max(maxLen + 2, 10), 20) };
         });
 
-        const summaryRow = `
-            <tr style="height: auto; background:#dce3f0;font-weight:700;mso-height-rule: auto;">
-                <td colspan="9" style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;text-align:right;mso-line-height-rule:exactly;">📊 合计 / 平均</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">—</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${sumTheory.toLocaleString()}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${sumActual.toLocaleString()}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${avgEff.toFixed(1)}%</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${totalDiff.toLocaleString()}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">达标 ${cntPass}行</td>
-            </tr>
-        `;
-
-        const excelHtml = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" 
-              xmlns:x="urn:schemas-microsoft-com:office:excel" 
-              xmlns="http://www.w3.org/TR/REC-html40">
-        <head>
-            <meta charset="UTF-8">
-            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-            <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>日报</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
-            <style>
-                body { font-family: 'Microsoft YaHei', Arial, sans-serif; padding:20px; }
-                .report-title { font-size:24px; font-weight:700; color:#0b1e4a; text-align:center; margin:0 0 4px 0; letter-spacing:2px; }
-                .report-sub { font-size:18px; font-weight:500; color:#1a3a6a; text-align:center; margin:0 0 8px 0; }
-                .report-meta { text-align:center; font-size:13px; color:#3b5a7a; margin-bottom:18px; }
-                table { border-collapse:collapse; width:100%; font-size:12px; font-family:'Microsoft YaHei',Arial,sans-serif; table-layout:auto; }
-                th { background:#1e3a8a; color:#ffffff; font-weight:700; border:1px solid #1e3a8a; padding:8px 6px; text-align:center; white-space:nowrap; }
-                td { border:1px solid #a0b3cc; padding:6px; text-align:center; word-wrap:break-word; white-space:normal; mso-line-height-rule:exactly; }
-                tr { height: auto; mso-height-rule: auto; }
-                .footer-note { margin-top:16px; font-size:12px; color:#546a84; text-align:right; border-top:1px solid #cbd5e1; padding-top:10px; }
-            </style>
-        </head>
-        <body>
-            <div class="report-title">新森元生产日报统计表</div>
-            <div class="report-sub">安徽新森元环保科技有限公司</div>
-            <div class="report-meta">
-                导出日期：${getTodayStr()} ｜ 数据日期范围：${rowsData[0]?.date||''} 至 ${rowsData[rowsData.length-1]?.date||''}
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>日期</th><th>班次</th><th>机台号</th><th>品名</th>
-                        <th>开机</th><th>关机</th><th>休息</th><th>维修时长</th><th>运行分钟</th>
-                        <th>速度(个/分)</th><th>理论产量</th><th>实际产量</th>
-                        <th>效率</th><th>差额</th><th>状态</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${tableRows}
-                    ${summaryRow}
-                </tbody>
-            </table>
-            <div class="footer-note">
-                注：运行分钟 = (关机-开机) - 休息 - 维修时长；效率 ≥95% 为达标；差额 = 理论产量 - 实际产量。
-            </div>
-        </body>
-        </html>`;
-
-        const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        XLSX.utils.book_append_sheet(wb, ws, '日报');
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/octet-stream' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `新森元生产日报_${getTodayStr()}.xls`;
+        link.download = `新森元生产日报_${getTodayStr()}.xlsx`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
