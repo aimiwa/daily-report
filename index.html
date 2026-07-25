@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>新森元生产日报统计表</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; }
+        body { background: #eef2f7; margin: 20px; padding: 0; }
+        .container {
+            max-width: 1500px; margin: 0 auto; background: #ffffff;
+            border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            padding: 24px 28px 32px;
+        }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 3px solid #1e3a8a; padding-bottom: 14px; margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+        .header h1 {
+            margin: 0; font-size: 26px; color: #0b1e4a;
+        }
+        .header h1 small {
+            font-size: 16px; font-weight: 400; color: #3b5a8a; margin-left: 12px;
+        }
+        .header-right { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .btn {
+            border: none; padding: 8px 18px; border-radius: 6px; font-size: 14px;
+            font-weight: 500; cursor: pointer; transition: 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-primary { background: #1e3a8a; color: #fff; }
+        .btn-primary:hover { background: #172e6b; }
+        .btn-success { background: #0f7b3a; color: #fff; }
+        .btn-success:hover { background: #0b642e; }
+        .btn-danger { background: #b91c1c; color: #fff; }
+        .btn-danger:hover { background: #991616; }
+        .btn-outline { background: #fff; color: #1e3a8a; border: 1px solid #1e3a8a; }
+        .btn-outline:hover { background: #f0f4ff; }
+        .btn-warning { background: #f59e0b; color: #fff; }
+        .btn-warning:hover { background: #d97706; }
+        .file-input-wrap { position: relative; display: inline-block; }
+        .file-input-wrap input[type="file"] {
+            position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;
+        }
+        .report-date {
+            text-align: left; font-size: 14px; color: #3b5a8a; margin-bottom: 12px;
+            border-bottom: 1px solid #dde3ed; padding-bottom: 6px;
+        }
+        .settings-panel {
+            background: #f8fafd; border: 1px solid #dde3ed; border-radius: 8px;
+            padding: 16px 20px; margin-bottom: 16px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px;
+        }
+        .settings-group {
+            display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+        }
+        .settings-group label {
+            font-weight: 600; color: #1a2a4a; font-size: 14px; white-space: nowrap;
+        }
+        .settings-group input[type="time"] {
+            padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px;
+            font-size: 14px; width: 110px; min-width: 100px;
+        }
+        .settings-group input[type="number"] {
+            padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px;
+            font-size: 14px; width: 70px; min-width: 60px;
+        }
+        .settings-group span { white-space: nowrap; font-size: 14px; }
+        .settings-panel .btn-save {
+            background: #1e3a8a; color: #fff; border: none;
+            padding: 6px 18px; border-radius: 4px; cursor: pointer; font-size: 14px; white-space: nowrap;
+        }
+        .settings-panel .btn-save:hover { background: #172e6b; }
+        .temp-hint {
+            font-size: 12px; color: #b91c1c; font-weight: 500;
+            background: #fee2e2; padding: 2px 10px; border-radius: 4px; white-space: nowrap;
+        }
+        .season-hint {
+            font-size: 12px; color: #0b642e; font-weight: 500;
+            background: #d1fae5; padding: 2px 10px; border-radius: 4px; white-space: nowrap;
+        }
+        .machine-panel {
+            background: #f8fafd; border: 1px solid #dde3ed; border-radius: 8px;
+            padding: 12px 20px; margin-bottom: 16px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px;
+        }
+        .machine-panel .machine-list {
+            display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center;
+        }
+        .machine-panel .machine-item {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #e9edf4; padding: 2px 8px 2px 12px; border-radius: 12px; font-size: 13px;
+        }
+        .machine-panel .machine-item .del-mac {
+            cursor: pointer; color: #b91c1c; font-weight: bold; margin-left: 4px;
+        }
+        .machine-panel .machine-item .del-mac:hover { color: #7f1313; }
+        .machine-panel input {
+            padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; width: 80px;
+        }
+        .machine-panel input[type="number"] { width: 70px; }
+        .machine-panel .btn-add-mac {
+            background: #1e3a8a; color: #fff; border: none;
+            padding: 4px 14px; border-radius: 4px; cursor: pointer; font-size: 14px;
+        }
+        .machine-panel .btn-add-mac:hover { background: #172e6b; }
+        .summary-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px; background: #f8fafd; border-radius: 10px;
+            padding: 16px 20px; margin-bottom: 20px; border: 1px solid #dde3ed;
+        }
+        .summary-item .label { font-size: 13px; color: #546a84; }
+        .summary-item .value { font-size: 22px; font-weight: 700; color: #0b1e4a; }
+        .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #dde3ed; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: auto; }
+        th {
+            background: #e9edf4; color: #1a2a4a; font-weight: 600; padding: 10px 8px;
+            border: 1px solid #cbd5e1; text-align: center; white-space: nowrap;
+            position: sticky; top: 0; z-index: 2;
+        }
+        td { padding: 6px 4px; border: 1px solid #cbd5e1; text-align: center; vertical-align: middle; background: #fff; }
+        td input, td select {
+            width: 100%; padding: 6px 4px; border: 1px solid #cbd5e1; border-radius: 4px;
+            font-size: 14px; background: #fff; box-sizing: border-box;
+        }
+        td input[readonly] {
+            background: #f4f6f9; cursor: not-allowed;
+        }
+        td select option.temp-option { color: #b91c1c; background: #fee2e2; }
+        td select option.season-option { color: #0b642e; background: #d1fae5; }
+        .row-del {
+            cursor: pointer; color: #b91c1c; font-weight: bold; font-size: 20px;
+            background: none; border: none; padding: 0 6px;
+        }
+        .row-del:hover { color: #7f1313; }
+        .status-badge {
+            display: inline-block; padding: 2px 12px; border-radius: 20px;
+            font-size: 12px; font-weight: 600;
+        }
+        .badge-ok { background: #d1fae5; color: #0b642e; }
+        .badge-warn { background: #fef3c7; color: #92400e; }
+        .badge-fail { background: #fde2e2; color: #991616; }
+        .footer-tip {
+            margin-top: 16px; font-size: 13px; color: #546a84;
+            text-align: right; border-top: 1px solid #e9edf4; padding-top: 14px;
+        }
+        @media (max-width: 900px) {
+            .settings-panel, .machine-panel { flex-direction: column; align-items: stretch; }
+            .settings-group { flex-wrap: wrap; }
+            .settings-group input[type="time"] { width: 100%; min-width: unset; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 头部 -->
+    <div class="header">
+        <h1>📋 新森元生产日报统计表 <small>安徽新森元环保科技有限公司</small></h1>
+        <div class="header-right">
+            <button class="btn btn-warning" onclick="backupData()">📤 备份数据</button>
+            <div class="file-input-wrap">
+                <button class="btn btn-outline">📥 恢复数据</button>
+                <input type="file" accept=".json" onchange="restoreData(event)">
+            </div>
+            <button class="btn btn-outline" onclick="downloadTemplate()">📄 模板</button>
+            <div class="file-input-wrap">
+                <button class="btn btn-outline">📂 导入 Excel</button>
+                <input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
+            </div>
+            <button class="btn btn-success" onclick="exportExcel()">📥 导出报表</button>
+            <button class="btn btn-primary" onclick="addRow()">➕ 添加行</button>
+            <button class="btn btn-danger" onclick="clearAll()">🗑️ 清空</button>
+        </div>
+    </div>
+    <div class="report-date">
+        📅 报告日期：<span id="todayLabel"></span> ｜ 数据实时保存
+    </div>
+
+    <!-- 班次默认设置（白班/夜班/寒暑） -->
+    <div class="settings-panel">
+        <div class="settings-group">
+            <label>🟦 白班默认</label>
+            <input type="time" id="dayStart" value="08:00">
+            <span>～</span>
+            <input type="time" id="dayEnd" value="17:00">
+            <span>休息</span>
+            <input type="number" id="dayRest" value="60" step="1" min="0"> <span>分钟</span>
+        </div>
+        <div class="settings-group">
+            <label>🟩 夜班默认</label>
+            <input type="time" id="nightStart" value="20:00">
+            <span>～</span>
+            <input type="time" id="nightEnd" value="05:00">
+            <span>休息</span>
+            <input type="number" id="nightRest" value="30" step="1" min="0"> <span>分钟</span>
+        </div>
+        <div class="settings-group">
+            <label>🟧 寒暑默认</label>
+            <input type="time" id="seasonStart" value="09:00">
+            <span>～</span>
+            <input type="time" id="seasonEnd" value="18:00">
+            <span>休息</span>
+            <input type="number" id="seasonRest" value="60" step="1" min="0"> <span>分钟</span>
+        </div>
+        <button class="btn-save" onclick="saveSettings()">保存设置</button>
+        <span style="font-size:13px; color:#546a84; white-space:nowrap;">
+            ⚡ 选班次自动填充；选「临时」自由录入
+            <span class="season-hint">寒暑有默认时间</span>
+            <span class="temp-hint">临时=手动</span>
+        </span>
+    </div>
+
+    <!-- 机台管理 -->
+    <div class="machine-panel">
+        <span style="font-weight:600; color:#1a2a4a;">🛠️ 机台管理</span>
+        <div class="machine-list" id="machineList"></div>
+        <div style="display:flex; gap:6px; align-items:center;">
+            <input type="text" id="newMachine" placeholder="机台号" style="width:80px;">
+            <input type="number" id="newSpeed" placeholder="速度" style="width:70px;" step="1" min="0">
+            <button class="btn-add-mac" onclick="addMachine()">添加</button>
+        </div>
+        <span style="font-size:12px; color:#546a84;">（机台号下拉选择后自动带出速度）</span>
+    </div>
+
+    <!-- 汇总 -->
+    <div class="summary-grid">
+        <div class="summary-item"><span class="label">📦 总实际产量</span><span class="value" id="sumActual">0</span></div>
+        <div class="summary-item"><span class="label">📐 总理论产量</span><span class="value" id="sumTheory">0</span></div>
+        <div class="summary-item"><span class="label">📈 平均效率</span><span class="value" id="avgEff">0%</span></div>
+        <div class="summary-item"><span class="label">⚠️ 总差额</span><span class="value" id="sumDiff">0</span></div>
+        <div class="summary-item"><span class="label">✅ 达标行数 (≥95%)</span><span class="value" id="cntPass">0</span></div>
+    </div>
+
+    <!-- 表格 -->
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th style="min-width:90px;">日期</th>
+                    <th style="min-width:80px;">班次</th>
+                    <th style="min-width:70px;">机台号</th>
+                    <th style="min-width:100px;">品名</th>
+                    <th style="min-width:70px;">开机</th>
+                    <th style="min-width:70px;">关机</th>
+                    <th style="min-width:70px;">休息</th>
+                    <th style="min-width:70px;">维修时长</th>
+                    <th style="min-width:70px;">运行分钟</th>
+                    <th style="min-width:80px;">速度(个/分)</th>
+                    <th style="min-width:90px;">理论产量</th>
+                    <th style="min-width:90px;">实际产量</th>
+                    <th style="min-width:60px;">效率</th>
+                    <th style="min-width:80px;">差额</th>
+                    <th style="min-width:70px;">状态</th>
+                    <th style="min-width:40px;">操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+    <div class="footer-tip">
+        💡 修改任意数据自动保存。机台号下拉选择后自动带出速度，可手动调整。<br>
+        🛠️ 「维修时长」输入后自动从运行分钟中扣除，使理论产量更精准。<br>
+        🔒 仅「临时」班次允许修改开机/关机/休息/速度，其他班次自动填充且只读。<br>
+        📤 使用“备份数据”可导出全部数据，在另一设备“恢复数据”即可同步。
+    </div>
+</div>
+
+<script>
+    // ==================== 模块 1: 工具函数 ====================
+    function getTodayStr() {
+        const d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2,
+        '0');
+    }
+
+    function parseTimeToMinutes(str) {
+        if (!str) return null;
+        const parts = str.split(':');
+        if (parts.length === 2) {
+            let h = parseInt(parts[0]),
+                m = parseInt(parts[1]);
+            if (!isNaN(h) && !isNaN(m) && h >= 0 && h <= 23 && m >= 0 && m <= 59) return h * 60 + m;
+        }
+        return null;
+    }
+
+    function calcMinutes(startStr, endStr, restMinutes, repairMinutes) {
+        const s = parseTimeToMinutes(startStr);
+        const e = parseTimeToMinutes(endStr);
+        if (s === null || e === null) return 0;
+        let diff = e - s;
+        if (diff < 0) diff += 1440;
+        diff -= (parseInt(restMinutes) || 0);
+        diff -= (parseInt(repairMinutes) || 0);
+        return Math.max(0, diff);
+    }
+
+    // ==================== 模块 2: 默认班次设置 ====================
+    let defaultSettings = {
+        day: { start: '08:00', end: '17:00', rest: 60 },
+        night: { start: '20:00', end: '05:00', rest: 30 },
+        season: { start: '09:00', end: '18:00', rest: 60 }
+    };
+
+    function loadSettings() {
+        const saved = localStorage.getItem('shiftDefaults');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                defaultSettings = parsed;
+            } catch (e) {}
+        }
+        document.getElementById('dayStart').value = defaultSettings.day.start;
+        document.getElementById('dayEnd').value = defaultSettings.day.end;
+        document.getElementById('dayRest').value = defaultSettings.day.rest;
+        document.getElementById('nightStart').value = defaultSettings.night.start;
+        document.getElementById('nightEnd').value = defaultSettings.night.end;
+        document.getElementById('nightRest').value = defaultSettings.night.rest;
+        document.getElementById('seasonStart').value = defaultSettings.season.start;
+        document.getElementById('seasonEnd').value = defaultSettings.season.end;
+        document.getElementById('seasonRest').value = defaultSettings.season.rest;
+    }
+
+    function saveSettings() {
+        defaultSettings.day.start = document.getElementById('dayStart').value || '08:00';
+        defaultSettings.day.end = document.getElementById('dayEnd').value || '17:00';
+        defaultSettings.day.rest = parseInt(document.getElementById('dayRest').value) || 0;
+        defaultSettings.night.start = document.getElementById('nightStart').value || '20:00';
+        defaultSettings.night.end = document.getElementById('nightEnd').value || '05:00';
+        defaultSettings.night.rest = parseInt(document.getElementById('nightRest').value) || 0;
+        defaultSettings.season.start = document.getElementById('seasonStart').value || '09:00';
+        defaultSettings.season.end = document.getElementById('seasonEnd').value || '18:00';
+        defaultSettings.season.rest = parseInt(document.getElementById('seasonRest').value) || 0;
+        localStorage.setItem('shiftDefaults', JSON.stringify(defaultSettings));
+        alert('默认班次时间已保存！');
+    }
+
+    function getDefaultTime(shift) {
+        const s = shift.trim();
+        if (s === '夜班') return defaultSettings.night;
+        if (s === '白班') return defaultSettings.day;
+        if (s === '寒暑') return defaultSettings.season;
+        return null;
+    }
+
+    // ==================== 模块 3: 机台管理 ====================
+    let machineList = [];
+
+    function loadMachines() {
+        const stored = localStorage.getItem('machineList');
+        if (stored) {
+            try { machineList = JSON.parse(stored); } catch (e) { machineList = []; }
+        }
+        if (!machineList.length) {
+            machineList = [
+                { id: '18', speed: 110 },
+                { id: '17', speed: 110 },
+                { id: '22', speed: 100 },
+                { id: '27', speed: 100 },
+                { id: '1', speed: 110 },
+                { id: 'A', speed: 45 },
+                { id: 'B', speed: 45 }
+            ];
+            saveMachines();
+        }
+        renderMachineList();
+    }
+
+    function saveMachines() {
+        localStorage.setItem('machineList', JSON.stringify(machineList));
+    }
+
+    function renderMachineList() {
+        const container = document.getElementById('machineList');
+        container.innerHTML = machineList.map(m =>
+            `<span class="machine-item">${m.id} (${m.speed}) <span class="del-mac" onclick="deleteMachine('${m.id}')">✕</span></span>`
+        ).join('');
+    }
+
+    function addMachine() {
+        const idInput = document.getElementById('newMachine');
+        const speedInput = document.getElementById('newSpeed');
+        const id = idInput.value.trim();
+        const speed = parseFloat(speedInput.value);
+        if (!id) { alert('请输入机台号'); return; }
+        if (isNaN(speed) || speed < 0) { alert('请输入有效速度'); return; }
+        if (machineList.some(m => m.id === id)) {
+            alert('该机台已存在，请勿重复添加');
+            return;
+        }
+        machineList.push({ id, speed });
+        saveMachines();
+        renderMachineList();
+        idInput.value = '';
+        speedInput.value = '';
+        renderTable();
+    }
+
+    function deleteMachine(id) {
+        if (!confirm(`确定删除机台 ${id} 吗？`)) return;
+        machineList = machineList.filter(m => m.id !== id);
+        saveMachines();
+        renderMachineList();
+        renderTable();
+    }
+
+    function getMachineSpeed(id) {
+        const found = machineList.find(m => m.id === id);
+        return found ? found.speed : null;
+    }
+
+    // ==================== 模块 4: 日报数据管理 ====================
+    let rowsData = [];
+
+    function loadData() {
+        const stored = localStorage.getItem('dailyReportData');
+        if (stored) {
+            try { rowsData = JSON.parse(stored); } catch (e) { rowsData = []; }
+        }
+        if (!rowsData || !rowsData.length) {
+            rowsData = [
+                { date: '2026-07-24', shift: '白班', machine: '18', product: '8oz', startTime: '08:00',
+                    endTime: '17:00', rest: 60, repair: 0, speed: 110, actual: 50693 },
+                { date: '2026-07-24', shift: '夜班', machine: '18', product: '8oz', startTime: '20:00',
+                    endTime: '05:00', rest: 30, repair: 15, speed: 110, actual: 48000 },
+                { date: '2026-07-25', shift: '寒暑', machine: '22', product: '12白色', startTime: '09:00',
+                    endTime: '18:00', rest: 60, repair: 10, speed: 100, actual: 62014 },
+                { date: '2026-07-25', shift: '临时', machine: '23', product: '7.5', startTime: '10:00',
+                    endTime: '15:00', rest: 30, repair: 0, speed: 90, actual: 30000 }
+            ];
+        }
+        renderTable();
+        updateSummary();
+        saveData();
+    }
+
+    function saveData() {
+        localStorage.setItem('dailyReportData', JSON.stringify(rowsData));
+    }
+
+    // ==================== 模块 5: 表格渲染 ====================
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        let html = '';
+        rowsData.forEach((row, idx) => {
+            const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
+            const speed = parseFloat(row.speed) || 0;
+            const theory = Math.round(minutes * speed);
+            const actual = parseFloat(row.actual) || 0;
+            const eff = theory ? (actual / theory) : 0;
+            const diff = theory - actual;
+            let statusText = '',
+                statusClass = '';
+            if (theory === 0 && actual === 0) { statusText = '⏸️ 待产';
+                statusClass = 'badge-warn'; } else if (eff >= 0.95) { statusText = '✅ 达标';
+                statusClass = 'badge-ok'; } else if (eff >= 0.80) { statusText = '⚠️ 偏低';
+                statusClass = 'badge-warn'; } else { statusText = '❌ 欠产';
+                statusClass = 'badge-fail'; }
+
+            const shiftOpts = ['白班', '夜班', '寒暑', '临时'].map(s => {
+                const selected = (row.shift === s) ? 'selected' : '';
+                let cls = '';
+                if (s === '临时') cls = 'class="temp-option"';
+                else if (s === '寒暑') cls = 'class="season-option"';
+                return `<option value="${s}" ${selected} ${cls}>${s}</option>`;
+            }).join('');
+
+            let machineOptsArray = machineList.map(m =>
+                `<option value="${m.id}" ${row.machine===m.id?'selected':''}>${m.id}</option>`
+            );
+            if (!machineList.some(m => m.id === row.machine) && row.machine) {
+                machineOptsArray.push(`<option value="${row.machine}" selected>${row.machine}</option>`);
+            }
+            const machineOptionsStr = machineOptsArray.join('');
+
+            const isReadonly = (row.shift !== '临时') ? 'readonly' : '';
+            const tempFlag = (row.shift === '临时') ? ' 🟡' : '';
+            const seasonFlag = (row.shift === '寒暑') ? ' 🌱' : '';
+
+            html += `<tr>
+                <td><input type="date" value="${row.date||''}" onchange="updateRow(${idx},'date',this.value)"></td>
+                <td><select onchange="onShiftChange(${idx}, this.value)">${shiftOpts}</select></td>
+                <td>
+                    <select onchange="onMachineChange(${idx}, this.value)">
+                        <option value="">-- 选择 --</option>
+                        ${machineOptionsStr}
+                    </select>
+                </td>
+                <td><input type="text" value="${row.product||''}" onchange="updateRow(${idx},'product',this.value)" placeholder="品名"></td>
+                <td><input type="time" value="${row.startTime||''}" onchange="updateRow(${idx},'startTime',this.value)" ${isReadonly}></td>
+                <td><input type="time" value="${row.endTime||''}" onchange="updateRow(${idx},'endTime',this.value)" ${isReadonly}></td>
+                <td><input type="number" value="${row.rest||0}" onchange="updateRow(${idx},'rest',this.value)" step="1" min="0" style="width:70px;" ${isReadonly}></td>
+                <td><input type="number" value="${row.repair||0}" onchange="updateRow(${idx},'repair',this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly value="${minutes}" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="${row.speed||''}" onchange="updateRow(${idx},'speed',this.value)" step="1" min="0" style="width:70px;" ${isReadonly}></td>
+                <td><input type="number" readonly value="${theory}" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="${row.actual||''}" onchange="updateRow(${idx},'actual',this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>${(eff*100).toFixed(1)}%</td>
+                <td>${diff}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}${seasonFlag}${tempFlag}</span></td>
+                <td><button class="row-del" onclick="deleteRow(${idx})">✕</button></td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+        updateSummary();
+        saveData();
+    }
+
+    function onShiftChange(idx, newShift) {
+        if (idx < 0 || idx >= rowsData.length) return;
+        rowsData[idx].shift = newShift;
+        if (newShift === '临时') {
+            if (!rowsData[idx].startTime) rowsData[idx].startTime = '08:00';
+            if (!rowsData[idx].endTime) rowsData[idx].endTime = '17:00';
+            if (rowsData[idx].rest === undefined || rowsData[idx].rest === '') rowsData[idx].rest = 0;
+            if (rowsData[idx].repair === undefined || rowsData[idx].repair === '') rowsData[idx].repair = 0;
+        } else {
+            const def = getDefaultTime(newShift);
+            if (def) {
+                rowsData[idx].startTime = def.start;
+                rowsData[idx].endTime = def.end;
+                rowsData[idx].rest = def.rest;
+                if (rowsData[idx].repair === undefined || rowsData[idx].repair === '') rowsData[idx].repair = 0;
+            }
+        }
+        renderTable();
+    }
+
+    function onMachineChange(idx, newMachine) {
+        if (idx < 0 || idx >= rowsData.length) return;
+        rowsData[idx].machine = newMachine;
+        const speed = getMachineSpeed(newMachine);
+        if (speed !== null) {
+            rowsData[idx].speed = speed;
+        }
+        renderTable();
+    }
+
+    function updateRow(idx, field, value) {
+        if (idx < 0 || idx >= rowsData.length) return;
+        if (rowsData[idx].shift !== '临时') {
+            if (['startTime', 'endTime', 'rest', 'speed'].includes(field)) {
+                return;
+            }
+        }
+        if (['speed', 'actual', 'rest', 'repair'].includes(field)) {
+            rowsData[idx][field] = parseFloat(value) || 0;
+        } else {
+            rowsData[idx][field] = value;
+        }
+        renderTable();
+    }
+
+    function deleteRow(idx) {
+        if (confirm('确认删除此行？')) {
+            rowsData.splice(idx, 1);
+            renderTable();
+            saveData();
+        }
+    }
+
+    function addRow() {
+        const def = getDefaultTime('白班');
+        rowsData.push({
+            date: getTodayStr(),
+            shift: '白班',
+            machine: '',
+            product: '',
+            startTime: def.start,
+            endTime: def.end,
+            rest: def.rest,
+            repair: 0,
+            speed: 100,
+            actual: 0
+        });
+        renderTable();
+        saveData();
+        const tbody = document.getElementById('tableBody');
+        if (tbody) tbody.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function clearAll() {
+        if (confirm('确定删除全部数据吗？')) {
+            rowsData = [];
+            renderTable();
+            saveData();
+        }
+    }
+
+    function updateSummary() {
+        let sumActual = 0,
+            sumTheory = 0,
+            cntPass = 0;
+        rowsData.forEach(row => {
+            const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
+            const theory = Math.round(minutes * (parseFloat(row.speed) || 0));
+            const actual = parseFloat(row.actual) || 0;
+            sumActual += actual;
+            sumTheory += theory;
+            if (theory > 0 && (actual / theory) >= 0.95) cntPass++;
+        });
+        document.getElementById('sumActual').textContent = sumActual.toLocaleString();
+        document.getElementById('sumTheory').textContent = sumTheory.toLocaleString();
+        const avgEff = sumTheory ? (sumActual / sumTheory) : 0;
+        document.getElementById('avgEff').textContent = (avgEff * 100).toFixed(1) + '%';
+        const diff = sumTheory - sumActual;
+        document.getElementById('sumDiff').textContent = diff.toLocaleString();
+        document.getElementById('cntPass').textContent = cntPass;
+    }
+
+    // ==================== 模块 6: 备份与恢复（全量数据） ====================
+    function backupData() {
+        const data = {
+            version: '1.0',
+            backupTime: new Date().toISOString(),
+            defaultSettings: defaultSettings,
+            machineList: machineList,
+            rowsData: rowsData
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `日报备份_${getTodayStr()}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+    }
+
+    function restoreData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (!data.defaultSettings || !data.machineList || !data.rowsData) {
+                    alert('无效的备份文件');
+                    return;
+                }
+                if (!confirm('恢复数据将覆盖当前所有数据，确定继续吗？')) return;
+                // 恢复设置
+                defaultSettings = data.defaultSettings;
+                localStorage.setItem('shiftDefaults', JSON.stringify(defaultSettings));
+                // 恢复机台
+                machineList = data.machineList;
+                localStorage.setItem('machineList', JSON.stringify(machineList));
+                // 恢复日报数据
+                rowsData = data.rowsData;
+                localStorage.setItem('dailyReportData', JSON.stringify(rowsData));
+                // 刷新界面
+                loadSettings();
+                renderMachineList();
+                renderTable();
+                alert('数据恢复成功！');
+            } catch (err) {
+                alert('恢复失败：' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // 重置 input
+    }
+
+    // ==================== 模块 7: 导入导出 Excel ====================
+    function downloadTemplate() {
+        const wb = XLSX.utils.book_new();
+        const data = [
+            ['日期', '班次', '机台号', '品名', '开机', '关机', '休息', '维修时长', '速度', '实际产量'],
+            ['2026-07-25', '白班', '18', '8oz', '08:00', '17:00', 60, 0, 110, 50693],
+            ['2026-07-25', '夜班', '18', '8oz', '20:00', '05:00', 30, 15, 110, 48000],
+            ['2026-07-25', '寒暑', '22', '12白色', '09:00', '18:00', 60, 10, 100, 62014],
+            ['2026-07-25', '临时', '23', '7.5', '10:00', '15:00', 30, 0, 90, 30000]
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        ws['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 10 }, { wch: 10 },
+        { wch: 12 }, { wch: 12 }, { wch: 14 }];
+        XLSX.utils.book_append_sheet(wb, ws, '模板');
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/octet-stream' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '日报导入模板.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+    }
+
+    function importExcel(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            try {
+                const data = new Uint8Array(ev.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+                if (!json.length) { alert('文件为空'); return; }
+
+                const headers = Object.keys(json[0]);
+                const map = {
+                    'date': ['日期', 'date', '日'],
+                    'shift': ['班次', 'shift', '班'],
+                    'machine': ['机台号', '机台', 'machine', '设备'],
+                    'product': ['品名', '产品', 'product', '名称'],
+                    'startTime': ['开机', '上班', '开始', 'start'],
+                    'endTime': ['关机', '下班', '结束', 'end'],
+                    'rest': ['休息', '休息分钟', 'rest'],
+                    'repair': ['维修时长', '维修', '修理', 'repair', '停机'],
+                    'speed': ['速度', '车速', 'speed', '速率'],
+                    'actual': ['实际产量', '产量', '实际', 'actual']
+                };
+                const colMap = {};
+                headers.forEach(h => {
+                    const trimmed = h.trim();
+                    for (let key in map) {
+                        if (map[key].some(k => trimmed.includes(k) || k.includes(trimmed))) {
+                            colMap[key] = h;
+                            break;
+                        }
+                    }
+                });
+                if (!colMap.date || !colMap.machine || !colMap.actual) {
+                    alert('导入失败：未找到必需的列（日期、机台号、实际产量）。');
+                    return;
+                }
+
+                let added = 0;
+                json.forEach(row => {
+                    let dateVal = row[colMap.date];
+                    let dateStr = '';
+                    if (typeof dateVal === 'number') {
+                        try {
+                            const d = new Date((dateVal - 25569) * 86400 * 1000);
+                            dateStr = d.toISOString().split('T')[0];
+                        } catch (e) { dateStr = getTodayStr(); }
+                    } else {
+                        dateStr = String(dateVal || '').trim();
+                        if (dateStr) {
+                            const d = new Date(dateStr);
+                            if (!isNaN(d.getTime())) dateStr = d.toISOString().split('T')[0];
+                        }
+                    }
+                    if (!dateStr) dateStr = getTodayStr();
+
+                    let shift = String(row[colMap.shift] || '').trim();
+                    if (!['白班', '夜班', '寒暑', '临时'].includes(shift)) shift = '临时';
+
+                    const machine = String(row[colMap.machine] || '').trim();
+                    const product = String(row[colMap.product] || '').trim();
+                    const formatTime = (val) => {
+                        if (typeof val === 'number') {
+                            const totalMinutes = Math.round((val - Math.floor(val)) * 1440);
+                            const h = Math.floor(totalMinutes / 60);
+                            const m = totalMinutes % 60;
+                            return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                        }
+                        return String(val || '').trim();
+                    };
+                    const start = formatTime(row[colMap.startTime]) || '08:00';
+                    const end = formatTime(row[colMap.endTime]) || '17:00';
+                    const rest = parseFloat(row[colMap.rest]) || 0;
+                    const repair = parseFloat(row[colMap.repair]) || 0;
+                    const speed = parseFloat(row[colMap.speed]) || 0;
+                    const actual = parseFloat(row[colMap.actual]) || 0;
+
+                    rowsData.push({
+                        date: dateStr,
+                        shift: shift,
+                        machine: machine,
+                        product: product,
+                        startTime: start,
+                        endTime: end,
+                        rest: rest,
+                        repair: repair,
+                        speed: speed,
+                        actual: actual
+                    });
+                    added++;
+                });
+                renderTable();
+                saveData();
+                alert(`导入成功！共添加 ${added} 行。`);
+            } catch (err) {
+                alert('导入失败：' + err.message);
+            }
+        };
+        reader.readAsArrayBuffer(file);
+        e.target.value = '';
+    }
+
+    function exportExcel() {
+        if (rowsData.length === 0) {
+            alert('没有数据可导出');
+            return;
+        }
+
+        let sumActual = 0,
+            sumTheory = 0,
+            cntPass = 0;
+        rowsData.forEach(row => {
+            const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
+            const theory = Math.round(minutes * (parseFloat(row.speed) || 0));
+            const actual = parseFloat(row.actual) || 0;
+            sumActual += actual;
+            sumTheory += theory;
+            if (theory > 0 && (actual / theory) >= 0.95) cntPass++;
+        });
+        const avgEff = sumTheory ? (sumActual / sumTheory * 100) : 0;
+        const totalDiff = sumTheory - sumActual;
+
+        let tableRows = '';
+        rowsData.forEach((row, idx) => {
+            const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
+            const theory = Math.round(minutes * (parseFloat(row.speed) || 0));
+            const actual = parseFloat(row.actual) || 0;
+            const eff = theory ? (actual / theory * 100) : 0;
+            const diff = theory - actual;
+            let status = eff >= 95 ? '达标' : (eff >= 80 ? '偏低' : '欠产');
+            if (theory === 0 && actual === 0) status = '待产';
+            const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafd';
+            tableRows += `<tr style="height: auto; background:${bg}; mso-height-rule: auto;">
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.date||''}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.shift||''}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.machine||''}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.product||''}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.startTime||''}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.endTime||''}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.rest||0}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.repair||0}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${minutes}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${row.speed||0}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;font-weight:600;mso-line-height-rule:exactly;">${theory}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;font-weight:600;mso-line-height-rule:exactly;">${actual}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${eff.toFixed(1)}%</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;font-weight:600;mso-line-height-rule:exactly;">${diff}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${status}</td>
+            </tr>`;
+        });
+
+        const summaryRow = `
+            <tr style="height: auto; background:#dce3f0;font-weight:700;mso-height-rule: auto;">
+                <td colspan="9" style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;text-align:right;mso-line-height-rule:exactly;">📊 合计 / 平均</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">—</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${sumTheory.toLocaleString()}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${sumActual.toLocaleString()}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${avgEff.toFixed(1)}%</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">${totalDiff.toLocaleString()}</td>
+                <td style="border:1px solid #a0b3cc;padding:6px;word-wrap:break-word;white-space:normal;mso-line-height-rule:exactly;">达标 ${cntPass}行</td>
+            </tr>
+        `;
+
+        const excelHtml = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" 
+              xmlns:x="urn:schemas-microsoft-com:office:excel" 
+              xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+            <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>日报</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+            <style>
+                body { font-family: 'Microsoft YaHei', Arial, sans-serif; padding:20px; }
+                .report-title { font-size:24px; font-weight:700; color:#0b1e4a; text-align:center; margin:0 0 4px 0; letter-spacing:2px; }
+                .report-sub { font-size:18px; font-weight:500; color:#1a3a6a; text-align:center; margin:0 0 8px 0; }
+                .report-meta { text-align:center; font-size:13px; color:#3b5a7a; margin-bottom:18px; }
+                table { border-collapse:collapse; width:100%; font-size:12px; font-family:'Microsoft YaHei',Arial,sans-serif; table-layout:auto; }
+                th { background:#1e3a8a; color:#ffffff; font-weight:700; border:1px solid #1e3a8a; padding:8px 6px; text-align:center; white-space:nowrap; }
+                td { border:1px solid #a0b3cc; padding:6px; text-align:center; word-wrap:break-word; white-space:normal; mso-line-height-rule:exactly; }
+                tr { height: auto; mso-height-rule: auto; }
+                .footer-note { margin-top:16px; font-size:12px; color:#546a84; text-align:right; border-top:1px solid #cbd5e1; padding-top:10px; }
+            </style>
+        </head>
+        <body>
+            <div class="report-title">新森元生产日报统计表</div>
+            <div class="report-sub">安徽新森元环保科技有限公司</div>
+            <div class="report-meta">
+                导出日期：${getTodayStr()} ｜ 数据日期范围：${rowsData[0]?.date||''} 至 ${rowsData[rowsData.length-1]?.date||''}
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>日期</th><th>班次</th><th>机台号</th><th>品名</th>
+                        <th>开机</th><th>关机</th><th>休息</th><th>维修时长</th><th>运行分钟</th>
+                        <th>速度(个/分)</th><th>理论产量</th><th>实际产量</th>
+                        <th>效率</th><th>差额</th><th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                    ${summaryRow}
+                </tbody>
+            </table>
+            <div class="footer-note">
+                注：运行分钟 = (关机-开机) - 休息 - 维修时长；效率 ≥95% 为达标；差额 = 理论产量 - 实际产量。
+            </div>
+        </body>
+        </html>`;
+
+        const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `新森元生产日报_${getTodayStr()}.xls`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+    }
+
+    // ==================== 初始化 ====================
+    document.getElementById('todayLabel').textContent = getTodayStr();
+    loadSettings();
+    loadMachines();
+    loadData();
+</script>
+</body>
+</html>
