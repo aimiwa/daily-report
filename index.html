@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<!-- saved from url=(0162)file:///C:/Users/Administrator/Desktop/%E6%97%A5%E6%8A%A5%E8%A1%A8/%E6%96%B0%E6%A3%AE%E5%85%83%E7%94%9F%E4%BA%A7%E6%97%A5%E6%8A%A5%E7%BB%9F%E8%AE%A1%E8%A1%A8.html -->
+<!-- saved from url=(0014)about:internet -->
 <html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>新森元生产日报统计表</title>
+    <script src="./新森元生产日报统计表_files/xlsx.full.min.js.下载"></script>
     <style>
         * { box-sizing: border-box; font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; }
         body { background: #eef2f7; margin: 20px; padding: 0; }
@@ -11,7 +12,7 @@
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #1e3a8a; padding-bottom: 14px; margin-bottom: 6px; flex-wrap: wrap; }
         .header h1 { margin: 0; font-size: 26px; color: #0b1e4a; }
         .header h1 small { font-size: 16px; font-weight: 400; color: #3b5a8a; margin-left: 12px; }
-        .header-right { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .header-right { display: flex; gap: 10px; flex-wrap: wrap; }
         .report-date { text-align: left; font-size: 14px; color: #3b5a8a; margin-bottom: 12px; border-bottom: 1px solid #dde3ed; padding-bottom: 6px; }
         .btn { border: none; padding: 8px 18px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-primary { background: #1e3a8a; color: #fff; }
@@ -24,33 +25,57 @@
         .btn-outline:hover { background: #f0f4ff; }
         .btn-warning { background: #f59e0b; color: #fff; }
         .btn-warning:hover { background: #d97706; }
-        .btn-sm { padding: 4px 10px; font-size: 12px; }
         .file-input-wrap { position: relative; display: inline-block; }
         .file-input-wrap input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
-        .batch-add { display: flex; align-items: center; gap: 6px; }
-        .batch-add input[type="number"] { width: 60px; padding: 6px 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; text-align: center; }
-        .query-panel { background: #f8fafd; border: 1px solid #dde3ed; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+
+        /* 查询面板 */
+        .query-panel {
+            background: #f8fafd; border: 1px solid #dde3ed; border-radius: 8px;
+            padding: 16px 20px; margin-bottom: 16px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+        }
         .query-panel label { font-weight: 600; color: #1a2a4a; font-size: 14px; white-space: nowrap; }
-        .query-panel input[type="date"], .query-panel input[type="month"] { padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; }
+        .query-panel input[type="date"], .query-panel input[type="month"] {
+            padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px;
+        }
         .query-panel .btn-query { background: #1e3a8a; color: #fff; border: none; padding: 6px 18px; border-radius: 4px; cursor: pointer; font-size: 14px; }
         .query-panel .btn-query:hover { background: #172e6b; }
         .query-panel .btn-reset { background: #6b7280; color: #fff; border: none; padding: 6px 18px; border-radius: 4px; cursor: pointer; font-size: 14px; }
         .query-panel .btn-reset:hover { background: #4b5563; }
-        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-        .dashboard-card { background: #f8fafd; border: 1px solid #dde3ed; border-radius: 8px; padding: 12px 16px; max-height: 350px; overflow-y: auto; }
-        .dashboard-card h3 { margin: 0 0 8px 0; font-size: 15px; color: #1a2a4a; border-bottom: 1px solid #dde3ed; padding-bottom: 6px; position: sticky; top: 0; background: #f8fafd; z-index: 1; }
-        .rank-item { display: flex; justify-content: space-between; padding: 3px 0; font-size: 13px; border-bottom: 1px dashed #e5e7eb; align-items: center; }
+
+        /* 看板 */
+        .dashboard-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+            margin-bottom: 20px;
+        }
+        .dashboard-card {
+            background: #f8fafd; border: 1px solid #dde3ed; border-radius: 8px;
+            padding: 12px 16px;
+        }
+        .dashboard-card h3 {
+            margin: 0 0 8px 0; font-size: 16px; color: #1a2a4a;
+            border-bottom: 1px solid #dde3ed; padding-bottom: 6px;
+        }
+        .rank-item {
+            display: flex; justify-content: space-between; padding: 4px 0;
+            font-size: 14px;
+            border-bottom: 1px dashed #e5e7eb;
+        }
         .rank-item:last-child { border-bottom: none; }
-        .rank-item .rank-num { font-weight: 700; margin-right: 6px; min-width: 24px; }
-        .rank-item .rank-name { flex: 1; }
+        .rank-item .rank-num { font-weight: 700; margin-right: 8px; }
+        .rank-item .rank-machine { flex: 1; }
         .rank-item .rank-value { font-weight: 600; }
-        .rank-item .rank-extra { font-size: 11px; color: #546a84; margin-left: 6px; }
         .rank-1st { color: #dc2626; }
         .rank-2nd { color: #f59e0b; }
-        .rank-3rd { color: #3b82f6; }
         .rank-last { color: #6b7280; }
         @media (max-width: 800px) { .dashboard-grid { grid-template-columns: 1fr; } }
-        .settings-panel { background: #f8fafd; border: 1px solid #dde3ed; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; }
+
+        /* 设置区域 */
+        .settings-panel {
+            background: #f8fafd; border: 1px solid #dde3ed; border-radius: 8px;
+            padding: 16px 20px; margin-bottom: 16px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px;
+        }
         .settings-group { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
         .settings-group label { font-weight: 600; color: #1a2a4a; font-size: 14px; white-space: nowrap; }
         .settings-group input[type="time"] { padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; width: 110px; min-width: 100px; }
@@ -60,23 +85,57 @@
         .settings-panel .btn-save:hover { background: #172e6b; }
         .temp-hint { font-size: 12px; color: #b91c1c; font-weight: 500; background: #fee2e2; padding: 2px 10px; border-radius: 4px; white-space: nowrap; }
         .season-hint { font-size: 12px; color: #0b642e; font-weight: 500; background: #d1fae5; padding: 2px 10px; border-radius: 4px; white-space: nowrap; }
-        .machine-panel, .operator-panel { background: #f8fafd; border: 1px solid #dde3ed; border-radius: 8px; padding: 12px 20px; margin-bottom: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
-        .machine-panel .machine-list, .operator-panel .operator-list { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
-        .machine-panel .machine-item, .operator-panel .operator-item { display: inline-flex; align-items: center; gap: 4px; background: #e9edf4; padding: 2px 8px 2px 12px; border-radius: 12px; font-size: 13px; }
-        .machine-panel .machine-item .del-mac, .operator-panel .operator-item .del-op { cursor: pointer; color: #b91c1c; font-weight: bold; margin-left: 4px; }
+
+        /* 机台与人员管理 */
+        .machine-panel, .operator-panel {
+            background: #f8fafd; border: 1px solid #dde3ed; border-radius: 8px;
+            padding: 12px 20px; margin-bottom: 16px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px;
+        }
+        .machine-panel .machine-list, .operator-panel .operator-list {
+            display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center;
+        }
+        .machine-panel .machine-item, .operator-panel .operator-item {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #e9edf4; padding: 2px 8px 2px 12px; border-radius: 12px; font-size: 13px;
+        }
+        .machine-panel .machine-item .del-mac, .operator-panel .operator-item .del-op {
+            cursor: pointer; color: #b91c1c; font-weight: bold; margin-left: 4px;
+        }
         .machine-panel .machine-item .del-mac:hover, .operator-panel .operator-item .del-op:hover { color: #7f1313; }
-        .machine-panel input, .operator-panel input { padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; width: 80px; }
+        .machine-panel input, .operator-panel input {
+            padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; width: 80px;
+        }
         .machine-panel input[type="number"] { width: 70px; }
-        .machine-panel .btn-add-mac, .operator-panel .btn-add-op { background: #1e3a8a; color: #fff; border: none; padding: 4px 14px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .machine-panel .btn-add-mac, .operator-panel .btn-add-op {
+            background: #1e3a8a; color: #fff; border: none;
+            padding: 4px 14px; border-radius: 4px; cursor: pointer; font-size: 14px;
+        }
         .machine-panel .btn-add-mac:hover, .operator-panel .btn-add-op:hover { background: #172e6b; }
-        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; background: #f8fafd; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; border: 1px solid #dde3ed; }
+
+        /* 汇总 */
+        .summary-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px; background: #f8fafd; border-radius: 10px;
+            padding: 16px 20px; margin-bottom: 20px; border: 1px solid #dde3ed;
+        }
         .summary-item .label { font-size: 13px; color: #546a84; }
         .summary-item .value { font-size: 22px; font-weight: 700; color: #0b1e4a; }
+
+        /* 表格 */
         .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #dde3ed; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: auto; }
-        th { background: #e9edf4; color: #1a2a4a; font-weight: 600; padding: 10px 8px; border: 1px solid #cbd5e1; text-align: center; white-space: nowrap; position: sticky; top: 0; z-index: 2; }
+        th {
+            background: #e9edf4; color: #1a2a4a; font-weight: 600; padding: 10px 8px;
+            border: 1px solid #cbd5e1; text-align: center; white-space: nowrap;
+            position: sticky; top: 0; z-index: 2;
+        }
         td { padding: 6px 4px; border: 1px solid #cbd5e1; text-align: center; vertical-align: middle; background: #fff; }
-        td input, td select { width: 100%; padding: 6px 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; background: #fff; box-sizing: border-box; min-width: 60px; }
+        td input, td select {
+            width: 100%; padding: 6px 4px; border: 1px solid #cbd5e1; border-radius: 4px;
+            font-size: 14px; background: #fff; box-sizing: border-box;
+            min-width: 60px;
+        }
         td input[readonly] { background: #f4f6f9; cursor: not-allowed; }
         td select option.temp-option { color: #b91c1c; background: #fee2e2; }
         td select option.season-option { color: #0b642e; background: #d1fae5; }
@@ -86,41 +145,39 @@
         .badge-ok { background: #d1fae5; color: #0b642e; }
         .badge-warn { background: #fef3c7; color: #92400e; }
         .badge-fail { background: #fde2e2; color: #991616; }
-        .footer-tip { margin-top: 16px; font-size: 13px; color: #546a84; text-align: right; border-top: 1px solid #e9edf4; padding-top: 14px; }
+        .footer-tip {
+            margin-top: 16px; font-size: 13px; color: #546a84;
+            text-align: right; border-top: 1px solid #e9edf4; padding-top: 14px;
+        }
         @media (max-width: 900px) {
             .settings-panel, .machine-panel, .operator-panel { flex-direction: column; align-items: stretch; }
             .settings-group { flex-wrap: wrap; }
             .settings-group input[type="time"] { width: 100%; min-width: unset; }
             .query-panel { flex-direction: column; align-items: stretch; }
-            .batch-add { flex-wrap: wrap; }
         }
-        #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; justify-content: center; align-items: center; color: #fff; font-size: 18px; }
-        #loading.active { display: flex; }
-        #loading .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #1e3a8a; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-right: 16px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-<div id="loading"><div class="spinner"></div><span>处理中...</span></div>
 <div class="container">
+    <!-- 头部 -->
     <div class="header">
         <h1>📋 新森元生产日报统计表 <small>安徽新森元环保科技有限公司</small></h1>
         <div class="header-right">
-            <button class="btn btn-outline btn-sm" onclick="downloadTemplate()">📄 模板</button>
+            <button class="btn btn-outline" onclick="downloadTemplate()">📄 模板</button>
             <div class="file-input-wrap">
-                <button class="btn btn-outline btn-sm" onclick="document.getElementById(&#39;fileInput&#39;).click()">📂 导入</button>
-                <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;" onchange="importExcel(event)">
+                <button class="btn btn-outline">📂 导入</button>
+                <input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
             </div>
-            <button class="btn btn-success btn-sm" onclick="showExportDialog()">📥 导出报表</button>
-            <div class="batch-add">
-                <input type="number" id="batchCount" value="1" min="1" max="50">
-                <button class="btn btn-primary btn-sm" onclick="addRowsBatch()">➕ 批量添加</button>
-            </div>
-            <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑️ 清空</button>
+            <button class="btn btn-success" onclick="showExportDialog()">📥 导出报表</button>
+            <button class="btn btn-primary" onclick="addRow()">➕ 添加行</button>
+            <button class="btn btn-danger" onclick="clearAll()">🗑️ 清空</button>
         </div>
     </div>
-    <div class="report-date">📅 报告日期：<span id="todayLabel">2026-07-29</span> ｜ 数据实时保存</div>
+    <div class="report-date">
+        📅 报告日期：<span id="todayLabel">2026-07-28</span> ｜ 数据实时保存
+    </div>
 
+    <!-- ===== 查询面板 ===== -->
     <div class="query-panel">
         <label>📅 筛选方式：</label>
         <select id="queryType" onchange="toggleQueryInput()">
@@ -131,49 +188,47 @@
         <input type="month" id="queryMonth" value="" style="display:none;">
         <button class="btn-query" onclick="applyQuery()">🔍 查询</button>
         <button class="btn-reset" onclick="resetQuery()">↺ 显示全部</button>
-        <span style="font-size:13px; color:#546a84; margin-left:auto;">当前筛选：<span id="queryStatus">全部数据</span></span>
+        <span style="font-size:13px; color:#546a84; margin-left:auto;">当前筛选：<span id="queryStatus">日期 2026-07-28</span></span>
     </div>
 
-    <div class="dashboard-grid">
+    <!-- ===== 看板 ===== -->
+    <div class="dashboard-grid" id="dashboardGrid">
         <div class="dashboard-card">
-            <h3>🏭 机台效率排名 <span id="machineRankLabel">（全部）</span></h3>
-            <div id="rankMachine"><div class="rank-item">
-                    <span class="rank-num rank-last">⚠️</span>
-                    <span class="rank-name">22</span>
-                    <span class="rank-extra">产量 62,014</span>
-                    <span class="rank-value">131.9%</span>
-                </div><div class="rank-item">
-                    <span class="rank-num rank-last">⚠️</span>
-                    <span class="rank-name">23</span>
-                    <span class="rank-extra">产量 30,000</span>
-                    <span class="rank-value">123.5%</span>
-                </div><div class="rank-item">
-                    <span class="rank-num rank-last">⚠️</span>
-                    <span class="rank-name">17</span>
-                    <span class="rank-extra">产量 50,693</span>
-                    <span class="rank-value">96.0%</span>
-                </div><div class="rank-item">
-                    <span class="rank-num rank-last">⚠️</span>
-                    <span class="rank-name">18</span>
-                    <span class="rank-extra">产量 48,000</span>
-                    <span class="rank-value">88.2%</span>
-                </div></div>
+            <h3>🏆 机台产量排名（前2）</h3>
+            <div id="rankTop"><div class="rank-item"><span class="rank-num rank-1st">🥇</span><span class="rank-machine">28</span><span class="rank-value">75,626</span></div><div class="rank-item"><span class="rank-num rank-2nd">🥈</span><span class="rank-machine">27</span><span class="rank-value">72,735</span></div></div>
         </div>
         <div class="dashboard-card">
-            <h3>👤 人员效率排名 <span id="operatorRankLabel">（按效率排序）</span></h3>
-            <div id="rankOperator"><div class="rank-item">
-                    <span class="rank-num">1</span>
-                    <span class="rank-name">未指定</span>
-                    <span class="rank-extra">产量 190,707</span>
-                    <span class="rank-value">106.8%</span>
-                </div></div>
+            <h3>⚠️ 机台产量排名（后2）</h3>
+            <div id="rankBottom"><div class="rank-item"><span class="rank-num rank-last">⚠️</span><span class="rank-machine">二楼打拐机</span><span class="rank-value">0</span></div><div class="rank-item"><span class="rank-num rank-last">⚠️</span><span class="rank-machine">二楼内页打孔</span><span class="rank-value">0</span></div></div>
         </div>
     </div>
 
+    <!-- 班次默认设置 -->
     <div class="settings-panel">
-        <div class="settings-group"><label>🟦 白班默认</label><input type="time" id="dayStart" value="08:00"><span>～</span><input type="time" id="dayEnd" value="17:00"><span>休息</span><input type="number" id="dayRest" value="60" step="1" min="0"><span>分钟</span></div>
-        <div class="settings-group"><label>🟩 夜班默认</label><input type="time" id="nightStart" value="20:00"><span>～</span><input type="time" id="nightEnd" value="05:00"><span>休息</span><input type="number" id="nightRest" value="30" step="1" min="0"><span>分钟</span></div>
-        <div class="settings-group"><label>🟧 寒暑默认</label><input type="time" id="seasonStart" value="09:00"><span>～</span><input type="time" id="seasonEnd" value="18:00"><span>休息</span><input type="number" id="seasonRest" value="60" step="1" min="0"><span>分钟</span></div>
+        <div class="settings-group">
+            <label>🟦 白班默认</label>
+            <input type="time" id="dayStart" value="08:00">
+            <span>～</span>
+            <input type="time" id="dayEnd" value="17:00">
+            <span>休息</span>
+            <input type="number" id="dayRest" value="60" step="1" min="0"> <span>分钟</span>
+        </div>
+        <div class="settings-group">
+            <label>🟩 夜班默认</label>
+            <input type="time" id="nightStart" value="20:00">
+            <span>～</span>
+            <input type="time" id="nightEnd" value="05:00">
+            <span>休息</span>
+            <input type="number" id="nightRest" value="30" step="1" min="0"> <span>分钟</span>
+        </div>
+        <div class="settings-group">
+            <label>🟧 寒暑默认</label>
+            <input type="time" id="seasonStart" value="09:00">
+            <span>～</span>
+            <input type="time" id="seasonEnd" value="18:00">
+            <span>休息</span>
+            <input type="number" id="seasonRest" value="60" step="1" min="0"> <span>分钟</span>
+        </div>
         <button class="btn-save" onclick="saveSettings()">保存设置</button>
         <span style="font-size:13px; color:#546a84; white-space:nowrap;">
             ⚡ 选班次自动填充；选「临时」自由录入
@@ -182,9 +237,10 @@
         </span>
     </div>
 
+    <!-- 机台管理 -->
     <div class="machine-panel">
         <span style="font-weight:600; color:#1a2a4a;">🛠️ 机台管理</span>
-        <div class="machine-list" id="machineList"><span class="machine-item">18 (110) <span class="del-mac" onclick="deleteMachine(&#39;18&#39;)">✕</span></span><span class="machine-item">17 (110) <span class="del-mac" onclick="deleteMachine(&#39;17&#39;)">✕</span></span><span class="machine-item">22 (100) <span class="del-mac" onclick="deleteMachine(&#39;22&#39;)">✕</span></span><span class="machine-item">27 (100) <span class="del-mac" onclick="deleteMachine(&#39;27&#39;)">✕</span></span><span class="machine-item">1 (110) <span class="del-mac" onclick="deleteMachine(&#39;1&#39;)">✕</span></span><span class="machine-item">A (45) <span class="del-mac" onclick="deleteMachine(&#39;A&#39;)">✕</span></span><span class="machine-item">B (45) <span class="del-mac" onclick="deleteMachine(&#39;B&#39;)">✕</span></span></div>
+        <div class="machine-list" id="machineList"><span class="machine-item">圆盘左 (48) <span class="del-mac" onclick="deleteMachine(&#39;圆盘左&#39;)">✕</span></span><span class="machine-item">圆盘右 (48) <span class="del-mac" onclick="deleteMachine(&#39;圆盘右&#39;)">✕</span></span><span class="machine-item">方盘左 (40) <span class="del-mac" onclick="deleteMachine(&#39;方盘左&#39;)">✕</span></span><span class="machine-item">方盘右 (40) <span class="del-mac" onclick="deleteMachine(&#39;方盘右&#39;)">✕</span></span><span class="machine-item">新8 (110) <span class="del-mac" onclick="deleteMachine(&#39;新8&#39;)">✕</span></span><span class="machine-item">18 (90) <span class="del-mac" onclick="deleteMachine(&#39;18&#39;)">✕</span></span><span class="machine-item">5 (40) <span class="del-mac" onclick="deleteMachine(&#39;5&#39;)">✕</span></span><span class="machine-item">1 (110) <span class="del-mac" onclick="deleteMachine(&#39;1&#39;)">✕</span></span><span class="machine-item">20 (105) <span class="del-mac" onclick="deleteMachine(&#39;20&#39;)">✕</span></span><span class="machine-item">22 (110) <span class="del-mac" onclick="deleteMachine(&#39;22&#39;)">✕</span></span><span class="machine-item">24 (110) <span class="del-mac" onclick="deleteMachine(&#39;24&#39;)">✕</span></span><span class="machine-item">25 (110) <span class="del-mac" onclick="deleteMachine(&#39;25&#39;)">✕</span></span><span class="machine-item">26 (110) <span class="del-mac" onclick="deleteMachine(&#39;26&#39;)">✕</span></span><span class="machine-item">27 (120) <span class="del-mac" onclick="deleteMachine(&#39;27&#39;)">✕</span></span><span class="machine-item">28 (120) <span class="del-mac" onclick="deleteMachine(&#39;28&#39;)">✕</span></span><span class="machine-item">热缩 (0) <span class="del-mac" onclick="deleteMachine(&#39;热缩&#39;)">✕</span></span><span class="machine-item">17 (90) <span class="del-mac" onclick="deleteMachine(&#39;17&#39;)">✕</span></span><span class="machine-item">二楼内页打孔 (75) <span class="del-mac" onclick="deleteMachine(&#39;二楼内页打孔&#39;)">✕</span></span><span class="machine-item">二楼打拐机 (0) <span class="del-mac" onclick="deleteMachine(&#39;二楼打拐机&#39;)">✕</span></span></div>
         <div style="display:flex; gap:6px; align-items:center;">
             <input type="text" id="newMachine" placeholder="机台号" style="width:80px;">
             <input type="number" id="newSpeed" placeholder="速度" style="width:70px;" step="1" min="0">
@@ -193,105 +249,525 @@
         <span style="font-size:12px; color:#546a84;">（机台号下拉选择后自动带出速度）</span>
     </div>
 
+    <!-- 开机人员管理 -->
     <div class="operator-panel">
         <span style="font-weight:600; color:#1a2a4a;">👤 开机人员管理</span>
-        <div class="operator-list" id="operatorList"><span class="operator-item">李四 <span class="del-op" onclick="deleteOperator(&#39;李四&#39;)">✕</span></span><span class="operator-item">王五 <span class="del-op" onclick="deleteOperator(&#39;王五&#39;)">✕</span></span><span class="operator-item">张三 <span class="del-op" onclick="deleteOperator(&#39;张三&#39;)">✕</span></span><span class="operator-item">赵六 <span class="del-op" onclick="deleteOperator(&#39;赵六&#39;)">✕</span></span></div>
+        <div class="operator-list" id="operatorList"><span class="operator-item">郭艳 <span class="del-op" onclick="deleteOperator(&#39;郭艳&#39;)">✕</span></span><span class="operator-item">王秀梅 <span class="del-op" onclick="deleteOperator(&#39;王秀梅&#39;)">✕</span></span><span class="operator-item">王其秀 <span class="del-op" onclick="deleteOperator(&#39;王其秀&#39;)">✕</span></span><span class="operator-item">陈文杰 <span class="del-op" onclick="deleteOperator(&#39;陈文杰&#39;)">✕</span></span><span class="operator-item">胡庆洁 <span class="del-op" onclick="deleteOperator(&#39;胡庆洁&#39;)">✕</span></span><span class="operator-item">卞可炜 <span class="del-op" onclick="deleteOperator(&#39;卞可炜&#39;)">✕</span></span><span class="operator-item">陈浩 <span class="del-op" onclick="deleteOperator(&#39;陈浩&#39;)">✕</span></span><span class="operator-item">周子旭 <span class="del-op" onclick="deleteOperator(&#39;周子旭&#39;)">✕</span></span><span class="operator-item">彭良庆 <span class="del-op" onclick="deleteOperator(&#39;彭良庆&#39;)">✕</span></span><span class="operator-item">熊金亮 <span class="del-op" onclick="deleteOperator(&#39;熊金亮&#39;)">✕</span></span><span class="operator-item">史万顺 <span class="del-op" onclick="deleteOperator(&#39;史万顺&#39;)">✕</span></span><span class="operator-item">周章文 <span class="del-op" onclick="deleteOperator(&#39;周章文&#39;)">✕</span></span><span class="operator-item">时君昊 <span class="del-op" onclick="deleteOperator(&#39;时君昊&#39;)">✕</span></span><span class="operator-item">李响迪 <span class="del-op" onclick="deleteOperator(&#39;李响迪&#39;)">✕</span></span><span class="operator-item">朱永浩 <span class="del-op" onclick="deleteOperator(&#39;朱永浩&#39;)">✕</span></span><span class="operator-item">杨子晨 <span class="del-op" onclick="deleteOperator(&#39;杨子晨&#39;)">✕</span></span><span class="operator-item">田池 <span class="del-op" onclick="deleteOperator(&#39;田池&#39;)">✕</span></span><span class="operator-item">徐礼阳 <span class="del-op" onclick="deleteOperator(&#39;徐礼阳&#39;)">✕</span></span><span class="operator-item">张银仙 <span class="del-op" onclick="deleteOperator(&#39;张银仙&#39;)">✕</span></span><span class="operator-item">汪伟 <span class="del-op" onclick="deleteOperator(&#39;汪伟&#39;)">✕</span></span><span class="operator-item">张红梅 <span class="del-op" onclick="deleteOperator(&#39;张红梅&#39;)">✕</span></span><span class="operator-item">高子涵 <span class="del-op" onclick="deleteOperator(&#39;高子涵&#39;)">✕</span></span><span class="operator-item">程祥瑞 <span class="del-op" onclick="deleteOperator(&#39;程祥瑞&#39;)">✕</span></span><span class="operator-item">王逸凡 <span class="del-op" onclick="deleteOperator(&#39;王逸凡&#39;)">✕</span></span></div>
         <div style="display:flex; gap:6px; align-items:center;">
             <input type="text" id="newOperator" placeholder="姓名" style="width:80px;">
             <button class="btn-add-op" onclick="addOperator()">添加</button>
         </div>
     </div>
 
+    <!-- 汇总 -->
     <div class="summary-grid" id="summaryGrid">
-        <div class="summary-item"><span class="label">📦 总实际产量</span><span class="value" id="sumActual">190,707</span></div>
-        <div class="summary-item"><span class="label">📐 总理论产量</span><span class="value" id="sumTheory">178,550</span></div>
-        <div class="summary-item"><span class="label">📈 平均效率</span><span class="value" id="avgEff">106.8%</span></div>
-        <div class="summary-item"><span class="label">⚠️ 总差额</span><span class="value" id="sumDiff">-12,157</span></div>
-        <div class="summary-item"><span class="label">✅ 达标行数 (≥95%)</span><span class="value" id="cntPass">3</span></div>
+        <div class="summary-item"><span class="label">📦 总实际产量</span><span class="value" id="sumActual">315,943</span></div>
+        <div class="summary-item"><span class="label">📐 总理论产量</span><span class="value" id="sumTheory">775,060</span></div>
+        <div class="summary-item"><span class="label">📈 平均效率</span><span class="value" id="avgEff">40.8%</span></div>
+        <div class="summary-item"><span class="label">⚠️ 总差额</span><span class="value" id="sumDiff">459,117</span></div>
+        <div class="summary-item"><span class="label">✅ 达标行数 (≥95%)</span><span class="value" id="cntPass">1</span></div>
     </div>
 
+    <!-- 表格 -->
     <div class="table-wrap">
         <table>
-            <thead><tr>
-                <th style="min-width:90px;">日期</th><th style="min-width:80px;">班次</th><th style="min-width:70px;">机台号</th>
-                <th style="min-width:100px;">品名</th><th style="min-width:80px;">开机人员</th><th style="min-width:70px;">开机</th>
-                <th style="min-width:70px;">关机</th><th style="min-width:70px;">休息</th><th style="min-width:70px;">维修时长</th>
-                <th style="min-width:70px;">运行分钟</th><th style="min-width:80px;">速度(个/分)</th><th style="min-width:90px;">理论产量</th>
-                <th style="min-width:90px;">实际产量</th><th style="min-width:60px;">效率</th><th style="min-width:80px;">差额</th>
-                <th style="min-width:70px;">状态</th><th style="min-width:40px;">操作</th>
-            </tr></thead>
+            <thead>
+                <tr>
+                    <th style="min-width:90px;">日期</th>
+                    <th style="min-width:80px;">班次</th>
+                    <th style="min-width:70px;">机台号</th>
+                    <th style="min-width:100px;">品名</th>
+                    <th style="min-width:80px;">开机人员</th>
+                    <th style="min-width:70px;">开机</th>
+                    <th style="min-width:70px;">关机</th>
+                    <th style="min-width:70px;">休息</th>
+                    <th style="min-width:70px;">维修时长</th>
+                    <th style="min-width:70px;">运行分钟</th>
+                    <th style="min-width:80px;">速度(个/分)</th>
+                    <th style="min-width:90px;">理论产量</th>
+                    <th style="min-width:90px;">实际产量</th>
+                    <th style="min-width:60px;">效率</th>
+                    <th style="min-width:80px;">差额</th>
+                    <th style="min-width:70px;">状态</th>
+                    <th style="min-width:40px;">操作</th>
+                </tr>
+            </thead>
             <tbody id="tableBody"><tr>
-                <td><input type="date" value="2026-07-24" onchange="updateRow(0,&#39;date&#39;,this.value)"></td>
-                <td><select onchange="onShiftChange(0, this.value)"><option value="白班">白班</option><option value="夜班">夜班</option><option value="寒暑" selected="" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
-                <td><select onchange="onMachineChange(0, this.value)"><option value="">-- 选择 --</option><option value="18">18</option><option value="17" selected="">17</option><option value="22">22</option><option value="27">27</option><option value="1">1</option><option value="A">A</option><option value="B">B</option></select></td>
-                <td><input type="text" value="8oz" onchange="updateRow(0,&#39;product&#39;,this.value)" placeholder="品名"></td>
-                <td><select onchange="updateRow(0,&#39;operator&#39;,this.value)"><option value="">-- 选择 --</option><option value="李四">李四</option><option value="王五">王五</option><option value="张三">张三</option><option value="赵六">赵六</option></select></td>
-                <td><input type="time" value="09:00" onchange="updateRow(0,&#39;startTime&#39;,this.value)" readonly=""></td>
-                <td><input type="time" value="18:00" onchange="updateRow(0,&#39;endTime&#39;,this.value)" readonly=""></td>
-                <td><input type="number" value="60" onchange="updateRow(0,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
-                <td><input type="number" value="0" onchange="updateRow(0,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
-                <td><input type="number" readonly="" value="480" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
-                <td><input type="number" value="110" onchange="updateRow(0,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
-                <td><input type="number" readonly="" value="52800" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
-                <td><input type="number" value="50693" onchange="updateRow(0,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
-                <td>96.0%</td>
-                <td>2107</td>
-                <td><span class="status-badge badge-ok">✅ 达标 🌱</span></td>
-                <td><button class="row-del" onclick="deleteRow(0)">✕</button></td>
-            </tr><tr>
-                <td><input type="date" value="2026-07-24" onchange="updateRow(1,&#39;date&#39;,this.value)"></td>
-                <td><select onchange="onShiftChange(1, this.value)"><option value="白班">白班</option><option value="夜班" selected="">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
-                <td><select onchange="onMachineChange(1, this.value)"><option value="">-- 选择 --</option><option value="18" selected="">18</option><option value="17">17</option><option value="22">22</option><option value="27">27</option><option value="1">1</option><option value="A">A</option><option value="B">B</option></select></td>
-                <td><input type="text" value="8oz" onchange="updateRow(1,&#39;product&#39;,this.value)" placeholder="品名"></td>
-                <td><select onchange="updateRow(1,&#39;operator&#39;,this.value)"><option value="">-- 选择 --</option><option value="李四">李四</option><option value="王五">王五</option><option value="张三">张三</option><option value="赵六">赵六</option></select></td>
-                <td><input type="time" value="20:00" onchange="updateRow(1,&#39;startTime&#39;,this.value)" readonly=""></td>
-                <td><input type="time" value="05:00" onchange="updateRow(1,&#39;endTime&#39;,this.value)" readonly=""></td>
-                <td><input type="number" value="30" onchange="updateRow(1,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
-                <td><input type="number" value="15" onchange="updateRow(1,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
-                <td><input type="number" readonly="" value="495" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
-                <td><input type="number" value="110" onchange="updateRow(1,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
-                <td><input type="number" readonly="" value="54450" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
-                <td><input type="number" value="48000" onchange="updateRow(1,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
-                <td>88.2%</td>
-                <td>6450</td>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(45,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(45, this.value)"><option value="白班" selected="">白班</option><option value="夜班">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(45, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27" selected="">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="7.5" onchange="updateRow(45,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(45,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅" selected="">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="06:10" onchange="updateRow(45,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="17:50" onchange="updateRow(45,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="30" onchange="updateRow(45,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(45,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="670" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="120" onchange="updateRow(45,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="80400" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="72735" onchange="updateRow(45,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>90.5%</td>
+                <td>7665</td>
                 <td><span class="status-badge badge-warn">⚠️ 偏低</span></td>
-                <td><button class="row-del" onclick="deleteRow(1)">✕</button></td>
+                <td><button class="row-del" onclick="deleteRow(45)">✕</button></td>
             </tr><tr>
-                <td><input type="date" value="2026-07-25" onchange="updateRow(2,&#39;date&#39;,this.value)"></td>
-                <td><select onchange="onShiftChange(2, this.value)"><option value="白班">白班</option><option value="夜班">夜班</option><option value="寒暑" selected="" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
-                <td><select onchange="onMachineChange(2, this.value)"><option value="">-- 选择 --</option><option value="18">18</option><option value="17">17</option><option value="22" selected="">22</option><option value="27">27</option><option value="1">1</option><option value="A">A</option><option value="B">B</option></select></td>
-                <td><input type="text" value="12白色" onchange="updateRow(2,&#39;product&#39;,this.value)" placeholder="品名"></td>
-                <td><select onchange="updateRow(2,&#39;operator&#39;,this.value)"><option value="">-- 选择 --</option><option value="李四">李四</option><option value="王五">王五</option><option value="张三">张三</option><option value="赵六">赵六</option></select></td>
-                <td><input type="time" value="09:00" onchange="updateRow(2,&#39;startTime&#39;,this.value)" readonly=""></td>
-                <td><input type="time" value="18:00" onchange="updateRow(2,&#39;endTime&#39;,this.value)" readonly=""></td>
-                <td><input type="number" value="60" onchange="updateRow(2,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
-                <td><input type="number" value="10" onchange="updateRow(2,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
-                <td><input type="number" readonly="" value="470" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
-                <td><input type="number" value="100" onchange="updateRow(2,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
-                <td><input type="number" readonly="" value="47000" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
-                <td><input type="number" value="62014" onchange="updateRow(2,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
-                <td>131.9%</td>
-                <td>-15014</td>
-                <td><span class="status-badge badge-ok">✅ 达标 🌱</span></td>
-                <td><button class="row-del" onclick="deleteRow(2)">✕</button></td>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(46,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(46, this.value)"><option value="白班" selected="">白班</option><option value="夜班">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(46, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28" selected="">28</option><option value="热缩">热缩</option><option value="17">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="7.5" onchange="updateRow(46,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(46,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟" selected="">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="06:10" onchange="updateRow(46,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="17:50" onchange="updateRow(46,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="30" onchange="updateRow(46,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(46,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="670" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="120" onchange="updateRow(46,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="80400" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="75626" onchange="updateRow(46,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>94.1%</td>
+                <td>4774</td>
+                <td><span class="status-badge badge-warn">⚠️ 偏低</span></td>
+                <td><button class="row-del" onclick="deleteRow(46)">✕</button></td>
             </tr><tr>
-                <td><input type="date" value="2026-07-25" onchange="updateRow(3,&#39;date&#39;,this.value)"></td>
-                <td><select onchange="onShiftChange(3, this.value)"><option value="白班">白班</option><option value="夜班">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" selected="" class="temp-option">临时</option></select></td>
-                <td><select onchange="onMachineChange(3, this.value)"><option value="">-- 选择 --</option><option value="18">18</option><option value="17">17</option><option value="22">22</option><option value="27">27</option><option value="1">1</option><option value="A">A</option><option value="B">B</option><option value="23" selected="">23</option></select></td>
-                <td><input type="text" value="7.5" onchange="updateRow(3,&#39;product&#39;,this.value)" placeholder="品名"></td>
-                <td><select onchange="updateRow(3,&#39;operator&#39;,this.value)"><option value="">-- 选择 --</option><option value="李四">李四</option><option value="王五">王五</option><option value="张三">张三</option><option value="赵六">赵六</option></select></td>
-                <td><input type="time" value="10:00" onchange="updateRow(3,&#39;startTime&#39;,this.value)"></td>
-                <td><input type="time" value="15:00" onchange="updateRow(3,&#39;endTime&#39;,this.value)"></td>
-                <td><input type="number" value="30" onchange="updateRow(3,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
-                <td><input type="number" value="0" onchange="updateRow(3,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
-                <td><input type="number" readonly="" value="270" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
-                <td><input type="number" value="90" onchange="updateRow(3,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
-                <td><input type="number" readonly="" value="24300" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
-                <td><input type="number" value="30000" onchange="updateRow(3,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
-                <td>123.5%</td>
-                <td>-5700</td>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(47,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(47, this.value)"><option value="白班">白班</option><option value="夜班">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" selected="" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(47, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25" selected="">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="5.5" onchange="updateRow(47,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(47,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳" selected="">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="06:10" onchange="updateRow(47,&#39;startTime&#39;,this.value)"></td>
+                <td><input type="time" value="11:30" onchange="updateRow(47,&#39;endTime&#39;,this.value)"></td>
+                <td><input type="number" value="30" onchange="updateRow(47,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" value="0" onchange="updateRow(47,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="290" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="110" onchange="updateRow(47,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="31900" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="28899" onchange="updateRow(47,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>90.6%</td>
+                <td>3001</td>
+                <td><span class="status-badge badge-warn">⚠️ 偏低 🟡</span></td>
+                <td><button class="row-del" onclick="deleteRow(47)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(48,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(48, this.value)"><option value="白班" selected="">白班</option><option value="夜班">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(48, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8" selected="">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="水涂8" onchange="updateRow(48,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(48,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀" selected="">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="06:10" onchange="updateRow(48,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="17:50" onchange="updateRow(48,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="30" onchange="updateRow(48,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(48,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="670" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="110" onchange="updateRow(48,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="73700" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="67913" onchange="updateRow(48,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>92.1%</td>
+                <td>5787</td>
+                <td><span class="status-badge badge-warn">⚠️ 偏低</span></td>
+                <td><button class="row-del" onclick="deleteRow(48)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(49,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(49, this.value)"><option value="白班" selected="">白班</option><option value="夜班">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(49, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左" selected="">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="圆盘" onchange="updateRow(49,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(49,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰" selected="">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="06:10" onchange="updateRow(49,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="17:50" onchange="updateRow(49,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="30" onchange="updateRow(49,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(49,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="670" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="48" onchange="updateRow(49,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="32160" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="29563" onchange="updateRow(49,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>91.9%</td>
+                <td>2597</td>
+                <td><span class="status-badge badge-warn">⚠️ 偏低</span></td>
+                <td><button class="row-del" onclick="deleteRow(49)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(50,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(50, this.value)"><option value="白班" selected="">白班</option><option value="夜班">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(50, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右" selected="">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="圆盘" onchange="updateRow(50,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(50,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰" selected="">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="06:10" onchange="updateRow(50,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="17:50" onchange="updateRow(50,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="30" onchange="updateRow(50,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(50,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="670" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="48" onchange="updateRow(50,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="32160" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="30000" onchange="updateRow(50,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>93.3%</td>
+                <td>2160</td>
+                <td><span class="status-badge badge-warn">⚠️ 偏低</span></td>
+                <td><button class="row-del" onclick="deleteRow(50)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(51,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(51, this.value)"><option value="白班">白班</option><option value="夜班">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" selected="" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(51, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17" selected="">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="8" onchange="updateRow(51,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(51,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳" selected="">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="15:10" onchange="updateRow(51,&#39;startTime&#39;,this.value)"></td>
+                <td><input type="time" value="17:50" onchange="updateRow(51,&#39;endTime&#39;,this.value)"></td>
+                <td><input type="number" value="30" onchange="updateRow(51,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" value="0" onchange="updateRow(51,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="130" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="90" onchange="updateRow(51,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="11700" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="11207" onchange="updateRow(51,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>95.8%</td>
+                <td>493</td>
                 <td><span class="status-badge badge-ok">✅ 达标 🟡</span></td>
-                <td><button class="row-del" onclick="deleteRow(3)">✕</button></td>
+                <td><button class="row-del" onclick="deleteRow(51)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(52,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(52, this.value)"><option value="白班">白班</option><option value="夜班" selected="">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(52, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左" selected="">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="圆盘" onchange="updateRow(52,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(52,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮" selected="">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="18:10" onchange="updateRow(52,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="05:50" onchange="updateRow(52,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="60" onchange="updateRow(52,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(52,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="640" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="48" onchange="updateRow(52,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="30720" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="" onchange="updateRow(52,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>0.0%</td>
+                <td>30720</td>
+                <td><span class="status-badge badge-fail">❌ 欠产</span></td>
+                <td><button class="row-del" onclick="deleteRow(52)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(53,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(53, this.value)"><option value="白班">白班</option><option value="夜班" selected="">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(53, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右" selected="">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="圆盘" onchange="updateRow(53,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(53,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮" selected="">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="18:10" onchange="updateRow(53,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="05:50" onchange="updateRow(53,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="60" onchange="updateRow(53,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(53,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="640" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="48" onchange="updateRow(53,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="30720" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="" onchange="updateRow(53,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>0.0%</td>
+                <td>30720</td>
+                <td><span class="status-badge badge-fail">❌ 欠产</span></td>
+                <td><button class="row-del" onclick="deleteRow(53)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(54,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(54, this.value)"><option value="白班">白班</option><option value="夜班" selected="">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(54, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8" selected="">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="8" onchange="updateRow(54,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(54,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭" selected="">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="18:10" onchange="updateRow(54,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="05:50" onchange="updateRow(54,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="60" onchange="updateRow(54,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(54,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="640" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="110" onchange="updateRow(54,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="70400" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="" onchange="updateRow(54,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>0.0%</td>
+                <td>70400</td>
+                <td><span class="status-badge badge-fail">❌ 欠产</span></td>
+                <td><button class="row-del" onclick="deleteRow(54)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(55,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(55, this.value)"><option value="白班">白班</option><option value="夜班" selected="">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(55, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27" selected="">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="7.5" onchange="updateRow(55,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(55,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="18:10" onchange="updateRow(55,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="05:50" onchange="updateRow(55,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="60" onchange="updateRow(55,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(55,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="640" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="120" onchange="updateRow(55,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="76800" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="" onchange="updateRow(55,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>0.0%</td>
+                <td>76800</td>
+                <td><span class="status-badge badge-fail">❌ 欠产</span></td>
+                <td><button class="row-del" onclick="deleteRow(55)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(56,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(56, this.value)"><option value="白班">白班</option><option value="夜班" selected="">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(56, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17" selected="">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="8" onchange="updateRow(56,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(56,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳" selected="">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="18:10" onchange="updateRow(56,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="05:50" onchange="updateRow(56,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="60" onchange="updateRow(56,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(56,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="640" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="90" onchange="updateRow(56,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="57600" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="" onchange="updateRow(56,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>0.0%</td>
+                <td>57600</td>
+                <td><span class="status-badge badge-fail">❌ 欠产</span></td>
+                <td><button class="row-del" onclick="deleteRow(56)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(57,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(57, this.value)"><option value="白班">白班</option><option value="夜班" selected="">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(57, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25" selected="">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="5.5" onchange="updateRow(57,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(57,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨" selected="">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="18:10" onchange="updateRow(57,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="05:50" onchange="updateRow(57,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="60" onchange="updateRow(57,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(57,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="640" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="110" onchange="updateRow(57,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="70400" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="" onchange="updateRow(57,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>0.0%</td>
+                <td>70400</td>
+                <td><span class="status-badge badge-fail">❌ 欠产</span></td>
+                <td><button class="row-del" onclick="deleteRow(57)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(58,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(58, this.value)"><option value="白班">白班</option><option value="夜班" selected="">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(58, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="热缩" selected="">热缩</option><option value="17">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="圆盘子" onchange="updateRow(58,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(58,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙" selected="">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="18:10" onchange="updateRow(58,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="05:50" onchange="updateRow(58,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="60" onchange="updateRow(58,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(58,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="640" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="" onchange="updateRow(58,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="0" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="" onchange="updateRow(58,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>0.0%</td>
+                <td>0</td>
+                <td><span class="status-badge badge-warn">⏸️ 待产</span></td>
+                <td><button class="row-del" onclick="deleteRow(58)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(59,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(59, this.value)"><option value="白班">白班</option><option value="夜班" selected="">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(59, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17">17</option><option value="二楼内页打孔" selected="">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="内页打孔" onchange="updateRow(59,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(59,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞" selected="">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="18:10" onchange="updateRow(59,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="05:50" onchange="updateRow(59,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="60" onchange="updateRow(59,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(59,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="640" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="75" onchange="updateRow(59,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="48000" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="" onchange="updateRow(59,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>0.0%</td>
+                <td>48000</td>
+                <td><span class="status-badge badge-fail">❌ 欠产</span></td>
+                <td><button class="row-del" onclick="deleteRow(59)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(60,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(60, this.value)"><option value="白班">白班</option><option value="夜班" selected="">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(60, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17">17</option><option value="二楼内页打孔" selected="">二楼内页打孔</option><option value="二楼打拐机">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="内页打孔" onchange="updateRow(60,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(60,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵" selected="">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="18:10" onchange="updateRow(60,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="05:50" onchange="updateRow(60,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="60" onchange="updateRow(60,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(60,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="640" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="75" onchange="updateRow(60,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="48000" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="" onchange="updateRow(60,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>0.0%</td>
+                <td>48000</td>
+                <td><span class="status-badge badge-fail">❌ 欠产</span></td>
+                <td><button class="row-del" onclick="deleteRow(60)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-28" onchange="updateRow(61,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(61, this.value)"><option value="白班">白班</option><option value="夜班" selected="">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td>
+                    <select onchange="onMachineChange(61, this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="圆盘左">圆盘左</option><option value="圆盘右">圆盘右</option><option value="方盘左">方盘左</option><option value="方盘右">方盘右</option><option value="新8">新8</option><option value="18">18</option><option value="5">5</option><option value="1">1</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="热缩">热缩</option><option value="17">17</option><option value="二楼内页打孔">二楼内页打孔</option><option value="二楼打拐机" selected="">二楼打拐机</option>
+                    </select>
+                </td>
+                <td><input type="text" value="打拐" onchange="updateRow(61,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td>
+                    <select onchange="updateRow(61,&#39;operator&#39;,this.value)">
+                        <option value="">-- 选择 --</option>
+                        <option value="郭艳">郭艳</option><option value="王秀梅">王秀梅</option><option value="王其秀">王其秀</option><option value="陈文杰">陈文杰</option><option value="胡庆洁">胡庆洁</option><option value="卞可炜">卞可炜</option><option value="陈浩">陈浩</option><option value="周子旭">周子旭</option><option value="彭良庆">彭良庆</option><option value="熊金亮">熊金亮</option><option value="史万顺">史万顺</option><option value="周章文">周章文</option><option value="时君昊" selected="">时君昊</option><option value="李响迪">李响迪</option><option value="朱永浩">朱永浩</option><option value="杨子晨">杨子晨</option><option value="田池">田池</option><option value="徐礼阳">徐礼阳</option><option value="张银仙">张银仙</option><option value="汪伟">汪伟</option><option value="张红梅">张红梅</option><option value="高子涵">高子涵</option><option value="程祥瑞">程祥瑞</option><option value="王逸凡">王逸凡</option>
+                    </select>
+                </td>
+                <td><input type="time" value="18:10" onchange="updateRow(61,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="05:50" onchange="updateRow(61,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="60" onchange="updateRow(61,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(61,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="640" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="" onchange="updateRow(61,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="0" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="" onchange="updateRow(61,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>0.0%</td>
+                <td>0</td>
+                <td><span class="status-badge badge-warn">⏸️ 待产</span></td>
+                <td><button class="row-del" onclick="deleteRow(61)">✕</button></td>
             </tr></tbody>
         </table>
     </div>
@@ -299,19 +775,29 @@
         💡 修改任意数据自动保存。机台号下拉选择后自动带出速度，可手动调整。<br>
         🛠️ 「维修时长」输入后自动从运行分钟中扣除，使理论产量更精准。<br>
         🔒 仅「临时」班次允许修改开机/关机/休息/速度，其他班次自动填充且只读。<br>
-        📊 机台和人员均按效率排名，按日显示机台前3/后3，按月/全部显示全部。<br>
-        📥 导出报表为 HTML 格式，无需联网，直接生成 .xls 文件，Excel 可正常打开。
+        📊 使用上方查询可查看历史数据及机台排名。
     </div>
 </div>
 
 <script>
-    // ============================================================
-    // 工具函数
-    // ============================================================
+    // ==================== 全局变量 ====================
+    let rowsData = [];
+    let machineList = [];
+    let operatorList = [];
+    let defaultSettings = {
+        day: { start: '08:00', end: '17:00', rest: 60 },
+        night: { start: '20:00', end: '05:00', rest: 30 },
+        season: { start: '09:00', end: '18:00', rest: 60 }
+    };
+    let currentFilter = { type: 'all', value: null }; // 'all', 'day', 'month'
+    let filteredRows = []; // 当前显示的数据（用于汇总和看板）
+
+    // ==================== 工具函数 ====================
     function getTodayStr() {
         const d = new Date();
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
+
     function parseTimeToMinutes(str) {
         if (!str) return null;
         const parts = str.split(':');
@@ -321,6 +807,7 @@
         }
         return null;
     }
+
     function calcMinutes(startStr, endStr, restMinutes, repairMinutes) {
         const s = parseTimeToMinutes(startStr);
         const e = parseTimeToMinutes(endStr);
@@ -331,109 +818,47 @@
         diff -= (parseInt(repairMinutes) || 0);
         return Math.max(0, diff);
     }
-    function sortByPinyin(arr) {
-        return arr.slice().sort((a, b) => a.localeCompare(b, 'zh-Hans-CN'));
-    }
 
-    // ============================================================
-    // localStorage 封装
-    // ============================================================
-    function dbGet(key, defaultVal) {
-        try {
-            const val = localStorage.getItem(key);
-            return val ? JSON.parse(val) : defaultVal;
-        } catch (e) { return defaultVal; }
-    }
-    function dbSet(key, val) {
-        localStorage.setItem(key, JSON.stringify(val));
-    }
-
-    // ============================================================
-    // 全局变量
-    // ============================================================
-    let rowsData = [], machineList = [], operatorList = [];
-    let defaultSettings = {
-        day: { start: '08:00', end: '17:00', rest: 60 },
-        night: { start: '20:00', end: '05:00', rest: 30 },
-        season: { start: '09:00', end: '18:00', rest: 60 }
-    };
-    let currentFilter = { type: 'all', value: null };
-    let filteredRows = [];
-    let xlsxLoaded = false;
-
-    // ============================================================
-    // 动态加载 xlsx 库（仅导入时需要，导出已改用 HTML 方式）
-    // ============================================================
-    function loadXlsx(callback) {
-        if (xlsxLoaded) { callback(); return; }
-        document.getElementById('loading').classList.add('active');
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.2/xlsx.full.min.js';
-        script.onload = function() {
-            xlsxLoaded = true;
-            document.getElementById('loading').classList.remove('active');
-            callback();
-        };
-        script.onerror = function() {
-            document.getElementById('loading').classList.remove('active');
-            alert('加载 Excel 库失败，导入功能暂时不可用，请检查网络或手动输入数据。');
-        };
-        document.head.appendChild(script);
-    }
-
-    // ============================================================
-    // 数据加载与保存
-    // ============================================================
+    // ==================== 存储与加载 ====================
     function loadAll() {
-        const savedSettings = dbGet('shiftDefaults', null);
-        if (savedSettings) defaultSettings = savedSettings;
-        applySettingsToUI();
-
-        machineList = dbGet('machineList', []);
-        if (!machineList.length) {
-            machineList = [
-                { id: '18', speed: 110 }, { id: '17', speed: 110 },
-                { id: '22', speed: 100 }, { id: '27', speed: 100 },
-                { id: '1', speed: 110 }, { id: 'A', speed: 45 }, { id: 'B', speed: 45 }
-            ];
-            dbSet('machineList', machineList);
-        }
-        renderMachineList();
-
-        operatorList = dbGet('operatorList', []);
-        if (!operatorList.length) {
-            operatorList = ['张三', '李四', '王五', '赵六'];
-            dbSet('operatorList', operatorList);
-        }
-        operatorList = sortByPinyin(operatorList);
-        renderOperatorList();
-
-        rowsData = dbGet('dailyReportData', []);
-        if (!rowsData.length) {
-            rowsData = [
-                { date: '2026-07-24', shift: '白班', machine: '18', product: '8oz', operator: '张三', startTime: '08:00', endTime: '17:00', rest: 60, repair: 0, speed: 110, actual: 50693 },
-                { date: '2026-07-24', shift: '夜班', machine: '18', product: '8oz', operator: '李四', startTime: '20:00', endTime: '05:00', rest: 30, repair: 15, speed: 110, actual: 48000 },
-                { date: '2026-07-25', shift: '寒暑', machine: '22', product: '12白色', operator: '王五', startTime: '09:00', endTime: '18:00', rest: 60, repair: 10, speed: 100, actual: 62014 },
-                { date: '2026-07-25', shift: '临时', machine: '23', product: '7.5', operator: '赵六', startTime: '10:00', endTime: '15:00', rest: 30, repair: 0, speed: 90, actual: 30000 }
-            ];
-            dbSet('dailyReportData', rowsData);
-        }
-        filteredRows = rowsData.slice();
-        renderTable();
-        updateSummaryAndRank();
+        loadSettings();
+        loadMachines();
+        loadOperators();
+        loadData();
+        applyQuery(); // 初始显示全部
     }
 
-    function applySettingsToUI() {
-        document.getElementById('dayStart').value = defaultSettings.day.start || '08:00';
-        document.getElementById('dayEnd').value = defaultSettings.day.end || '17:00';
-        document.getElementById('dayRest').value = defaultSettings.day.rest || 60;
-        document.getElementById('nightStart').value = defaultSettings.night.start || '20:00';
-        document.getElementById('nightEnd').value = defaultSettings.night.end || '05:00';
-        document.getElementById('nightRest').value = defaultSettings.night.rest || 30;
-        document.getElementById('seasonStart').value = defaultSettings.season.start || '09:00';
-        document.getElementById('seasonEnd').value = defaultSettings.season.end || '18:00';
-        document.getElementById('seasonRest').value = defaultSettings.season.rest || 60;
+    // ---------- 设置 ----------
+    function loadSettings() {
+        const saved = localStorage.getItem('shiftDefaults');
+        if (saved) {
+            try { defaultSettings = JSON.parse(saved); } catch (e) {}
+        }
+        document.getElementById('dayStart').value = defaultSettings.day.start;
+        document.getElementById('dayEnd').value = defaultSettings.day.end;
+        document.getElementById('dayRest').value = defaultSettings.day.rest;
+        document.getElementById('nightStart').value = defaultSettings.night.start;
+        document.getElementById('nightEnd').value = defaultSettings.night.end;
+        document.getElementById('nightRest').value = defaultSettings.night.rest;
+        document.getElementById('seasonStart').value = defaultSettings.season.start;
+        document.getElementById('seasonEnd').value = defaultSettings.season.end;
+        document.getElementById('seasonRest').value = defaultSettings.season.rest;
     }
+
+    function saveSettings() {
+        defaultSettings.day.start = document.getElementById('dayStart').value || '08:00';
+        defaultSettings.day.end = document.getElementById('dayEnd').value || '17:00';
+        defaultSettings.day.rest = parseInt(document.getElementById('dayRest').value) || 0;
+        defaultSettings.night.start = document.getElementById('nightStart').value || '20:00';
+        defaultSettings.night.end = document.getElementById('nightEnd').value || '05:00';
+        defaultSettings.night.rest = parseInt(document.getElementById('nightRest').value) || 0;
+        defaultSettings.season.start = document.getElementById('seasonStart').value || '09:00';
+        defaultSettings.season.end = document.getElementById('seasonEnd').value || '18:00';
+        defaultSettings.season.rest = parseInt(document.getElementById('seasonRest').value) || 0;
+        localStorage.setItem('shiftDefaults', JSON.stringify(defaultSettings));
+        alert('默认班次时间已保存！');
+    }
+
     function getDefaultTime(shift) {
         const s = shift.trim();
         if (s === '夜班') return defaultSettings.night;
@@ -442,14 +867,32 @@
         return null;
     }
 
-    // ============================================================
-    // 机台管理
-    // ============================================================
+    // ---------- 机台 ----------
+    function loadMachines() {
+        const stored = localStorage.getItem('machineList');
+        if (stored) {
+            try { machineList = JSON.parse(stored); } catch (e) { machineList = []; }
+        }
+        if (!machineList.length) {
+            machineList = [
+                { id: '18', speed: 110 }, { id: '17', speed: 110 },
+                { id: '22', speed: 100 }, { id: '27', speed: 100 },
+                { id: '1', speed: 110 }, { id: 'A', speed: 45 }, { id: 'B', speed: 45 }
+            ];
+            saveMachines();
+        }
+        renderMachineList();
+    }
+
+    function saveMachines() { localStorage.setItem('machineList', JSON.stringify(machineList)); }
+
     function renderMachineList() {
-        document.getElementById('machineList').innerHTML = machineList.map(m =>
+        const container = document.getElementById('machineList');
+        container.innerHTML = machineList.map(m =>
             `<span class="machine-item">${m.id} (${m.speed}) <span class="del-mac" onclick="deleteMachine('${m.id}')">✕</span></span>`
         ).join('');
     }
+
     function addMachine() {
         const id = document.getElementById('newMachine').value.trim();
         const speed = parseFloat(document.getElementById('newSpeed').value);
@@ -457,147 +900,96 @@
         if (isNaN(speed) || speed < 0) { alert('请输入有效速度'); return; }
         if (machineList.some(m => m.id === id)) { alert('该机台已存在'); return; }
         machineList.push({ id, speed });
-        dbSet('machineList', machineList);
+        saveMachines();
         renderMachineList();
         document.getElementById('newMachine').value = '';
         document.getElementById('newSpeed').value = '';
         renderTable();
     }
+
     function deleteMachine(id) {
         if (!confirm(`确定删除机台 ${id} 吗？`)) return;
         machineList = machineList.filter(m => m.id !== id);
-        dbSet('machineList', machineList);
+        saveMachines();
         renderMachineList();
         renderTable();
     }
+
     function getMachineSpeed(id) {
         const found = machineList.find(m => m.id === id);
         return found ? found.speed : null;
     }
 
-    // ============================================================
-    // 人员管理
-    // ============================================================
+    // ---------- 开机人员 ----------
+    function loadOperators() {
+        const stored = localStorage.getItem('operatorList');
+        if (stored) {
+            try { operatorList = JSON.parse(stored); } catch (e) { operatorList = []; }
+        }
+        if (!operatorList.length) {
+            operatorList = ['张三', '李四', '王五', '赵六'];
+            saveOperators();
+        }
+        renderOperatorList();
+    }
+
+    function saveOperators() { localStorage.setItem('operatorList', JSON.stringify(operatorList)); }
+
     function renderOperatorList() {
-        document.getElementById('operatorList').innerHTML = operatorList.map(op =>
+        const container = document.getElementById('operatorList');
+        container.innerHTML = operatorList.map(op =>
             `<span class="operator-item">${op} <span class="del-op" onclick="deleteOperator('${op}')">✕</span></span>`
         ).join('');
     }
+
     function addOperator() {
         const name = document.getElementById('newOperator').value.trim();
         if (!name) { alert('请输入姓名'); return; }
         if (operatorList.includes(name)) { alert('该人员已存在'); return; }
         operatorList.push(name);
-        operatorList = sortByPinyin(operatorList);
-        dbSet('operatorList', operatorList);
+        saveOperators();
         renderOperatorList();
         document.getElementById('newOperator').value = '';
         renderTable();
     }
+
     function deleteOperator(name) {
         if (!confirm(`确定删除人员 ${name} 吗？`)) return;
         operatorList = operatorList.filter(op => op !== name);
-        dbSet('operatorList', operatorList);
+        saveOperators();
         renderOperatorList();
         renderTable();
     }
 
-    // ============================================================
-    // 日报数据操作
-    // ============================================================
-    function saveRowsToDb() { dbSet('dailyReportData', rowsData); }
-
-    function addRowsBatch() {
-        const countInput = document.getElementById('batchCount');
-        let count = parseInt(countInput.value) || 1;
-        if (count < 1) count = 1;
-        if (count > 50) { alert('一次最多添加50行'); count = 50; }
-        const def = getDefaultTime('白班');
-        for (let i = 0; i < count; i++) {
-            rowsData.push({
-                date: getTodayStr(),
-                shift: '白班',
-                machine: '',
-                product: '',
-                operator: '',
-                startTime: def.start,
-                endTime: def.end,
-                rest: def.rest,
-                repair: 0,
-                speed: 100,
-                actual: 0
-            });
+    // ---------- 日报数据 ----------
+    function loadData() {
+        const stored = localStorage.getItem('dailyReportData');
+        if (stored) {
+            try { rowsData = JSON.parse(stored); } catch (e) { rowsData = []; }
         }
-        saveRowsToDb();
-        applyFilterAndRender();
-        countInput.value = 1;
-    }
-    function deleteRow(idx) {
-        if (!confirm('确认删除此行？')) return;
-        rowsData.splice(idx, 1);
-        saveRowsToDb();
-        applyFilterAndRender();
-    }
-    function clearAll() {
-        if (!confirm('确定删除全部数据吗？')) return;
-        rowsData = [];
-        saveRowsToDb();
-        applyFilterAndRender();
+        if (!rowsData || !rowsData.length) {
+            rowsData = [
+                { date: '2026-07-24', shift: '白班', machine: '18', product: '8oz', operator: '张三', startTime: '08:00', endTime: '17:00', rest: 60, repair: 0, speed: 110, actual: 50693 },
+                { date: '2026-07-24', shift: '夜班', machine: '18', product: '8oz', operator: '李四', startTime: '20:00', endTime: '05:00', rest: 30, repair: 15, speed: 110, actual: 48000 },
+                { date: '2026-07-25', shift: '寒暑', machine: '22', product: '12白色', operator: '王五', startTime: '09:00', endTime: '18:00', rest: 60, repair: 10, speed: 100, actual: 62014 },
+                { date: '2026-07-25', shift: '临时', machine: '23', product: '7.5', operator: '赵六', startTime: '10:00', endTime: '15:00', rest: 30, repair: 0, speed: 90, actual: 30000 }
+            ];
+        }
+        filteredRows = rowsData.slice(); // 初始全部
+        renderTable();
+        updateSummaryAndRank();
+        saveData();
     }
 
-    // ============================================================
-    // 事件处理
-    // ============================================================
-    function onShiftChange(idx, newShift) {
-        if (idx < 0 || idx >= rowsData.length) return;
-        rowsData[idx].shift = newShift;
-        if (newShift === '临时') {
-            if (!rowsData[idx].startTime) rowsData[idx].startTime = '08:00';
-            if (!rowsData[idx].endTime) rowsData[idx].endTime = '17:00';
-            if (rowsData[idx].rest === undefined || rowsData[idx].rest === '') rowsData[idx].rest = 0;
-            if (rowsData[idx].repair === undefined || rowsData[idx].repair === '') rowsData[idx].repair = 0;
-        } else {
-            const def = getDefaultTime(newShift);
-            if (def) {
-                rowsData[idx].startTime = def.start;
-                rowsData[idx].endTime = def.end;
-                rowsData[idx].rest = def.rest;
-                if (rowsData[idx].repair === undefined || rowsData[idx].repair === '') rowsData[idx].repair = 0;
-            }
-        }
-        saveRowsToDb();
-        applyFilterAndRender();
-    }
-    function onMachineChange(idx, newMachine) {
-        if (idx < 0 || idx >= rowsData.length) return;
-        rowsData[idx].machine = newMachine;
-        const speed = getMachineSpeed(newMachine);
-        if (speed !== null) rowsData[idx].speed = speed;
-        saveRowsToDb();
-        applyFilterAndRender();
-    }
-    function updateRow(idx, field, value) {
-        if (idx < 0 || idx >= rowsData.length) return;
-        if (rowsData[idx].shift !== '临时') {
-            if (['startTime', 'endTime', 'rest', 'speed'].includes(field)) return;
-        }
-        if (['speed', 'actual', 'rest', 'repair'].includes(field)) {
-            rowsData[idx][field] = parseFloat(value) || 0;
-        } else {
-            rowsData[idx][field] = value;
-        }
-        saveRowsToDb();
-        applyFilterAndRender();
-    }
+    function saveData() { localStorage.setItem('dailyReportData', JSON.stringify(rowsData)); }
 
-    // ============================================================
-    // 查询与看板
-    // ============================================================
+    // ==================== 查询与看板 ====================
     function toggleQueryInput() {
         const type = document.getElementById('queryType').value;
         document.getElementById('queryDate').style.display = (type === 'day') ? 'inline-block' : 'none';
         document.getElementById('queryMonth').style.display = (type === 'month') ? 'inline-block' : 'none';
     }
+
     function applyQuery() {
         const type = document.getElementById('queryType').value;
         if (type === 'day') {
@@ -609,40 +1001,35 @@
             const val = document.getElementById('queryMonth').value;
             if (!val) { alert('请选择月份'); return; }
             currentFilter = { type: 'month', value: val };
-            filteredRows = rowsData.filter(row => row.date && row.date.startsWith(val));
+            filteredRows = rowsData.filter(row => {
+                const d = row.date;
+                return d && d.startsWith(val);
+            });
         }
-        filteredRows.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
         document.getElementById('queryStatus').textContent = (currentFilter.type === 'all') ? '全部数据' :
             (currentFilter.type === 'day' ? `日期 ${currentFilter.value}` : `月份 ${currentFilter.value}`);
         renderTable();
         updateSummaryAndRank();
+        saveData();
     }
+
     function resetQuery() {
         currentFilter = { type: 'all', value: null };
         filteredRows = rowsData.slice();
-        filteredRows.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
         document.getElementById('queryStatus').textContent = '全部数据';
         document.getElementById('queryDate').value = '';
         document.getElementById('queryMonth').value = '';
         renderTable();
         updateSummaryAndRank();
-    }
-    function applyFilterAndRender() {
-        if (currentFilter.type === 'all') {
-            filteredRows = rowsData.slice();
-        } else if (currentFilter.type === 'day') {
-            filteredRows = rowsData.filter(row => row.date === currentFilter.value);
-        } else if (currentFilter.type === 'month') {
-            filteredRows = rowsData.filter(row => row.date && row.date.startsWith(currentFilter.value));
-        }
-        filteredRows.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-        renderTable();
-        updateSummaryAndRank();
+        saveData();
     }
 
-    // ============================================================
-    // 汇总与排名
-    // ============================================================
+    function updateSummaryAndRank() {
+        updateSummary();
+        updateRanking();
+    }
+
+    // ==================== 汇总 ====================
     function updateSummary() {
         let sumActual = 0, sumTheory = 0, cntPass = 0;
         filteredRows.forEach(row => {
@@ -661,97 +1048,49 @@
         document.getElementById('cntPass').textContent = cntPass;
     }
 
+    // ==================== 排名看板 ====================
     function updateRanking() {
-        const isDay = (currentFilter.type === 'day');
-
-        // 机台效率排名
-        const machineMap = {};
+        // 按机台汇总实际产量
+        const map = {};
         filteredRows.forEach(row => {
             const m = row.machine || '未知';
             const actual = parseFloat(row.actual) || 0;
-            const theory = Math.round(calcMinutes(row.startTime, row.endTime, row.rest, row.repair) * (parseFloat(row.speed) || 0));
-            if (!machineMap[m]) machineMap[m] = { total: 0, theory: 0 };
-            machineMap[m].total += actual;
-            machineMap[m].theory += theory;
+            if (map[m]) map[m] += actual;
+            else map[m] = actual;
         });
-        const machineSorted = Object.entries(machineMap).map(([name, data]) => ({
-            name, total: data.total, eff: data.theory > 0 ? (data.total / data.theory * 100) : 0
-        })).sort((a, b) => b.eff - a.eff);
+        const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+        const top2 = sorted.slice(0, 2);
+        const bottom2 = sorted.slice(-2);
 
-        const rankMachineEl = document.getElementById('rankMachine');
-        const machineLabel = document.getElementById('machineRankLabel');
-        let machineHtml = '';
-        if (machineSorted.length === 0) {
-            machineHtml = '<div style="color:#6b7280;font-size:13px;">暂无数据</div>';
+        const rankTopEl = document.getElementById('rankTop');
+        if (top2.length === 0) {
+            rankTopEl.innerHTML = '<div style="color:#6b7280;">暂无数据</div>';
         } else {
-            let displayItems = machineSorted;
-            let labelText = '';
-            if (isDay) {
-                const top3 = machineSorted.slice(0, 3);
-                const bottom3 = machineSorted.slice(-3);
-                displayItems = [...top3, ...bottom3];
-                labelText = '（前3/后3）';
-            } else {
-                displayItems = machineSorted;
-                labelText = '（全部）';
-            }
-            machineLabel.textContent = labelText;
-            displayItems.forEach((item, idx) => {
-                const isTop = (isDay && idx < 3);
-                const cls = isTop ? (idx === 0 ? 'rank-1st' : (idx === 1 ? 'rank-2nd' : 'rank-3rd')) : 'rank-last';
-                const icon = isTop ? (idx === 0 ? '🥇' : (idx === 1 ? '🥈' : '🥉')) : '⚠️';
-                machineHtml += `<div class="rank-item">
-                    <span class="rank-num ${cls}">${icon}</span>
-                    <span class="rank-name">${item.name}</span>
-                    <span class="rank-extra">产量 ${item.total.toLocaleString()}</span>
-                    <span class="rank-value">${item.eff.toFixed(1)}%</span>
-                </div>`;
-            });
+            rankTopEl.innerHTML = top2.map(([machine, total], i) => {
+                const cls = i === 0 ? 'rank-1st' : 'rank-2nd';
+                const icon = i === 0 ? '🥇' : '🥈';
+                return `<div class="rank-item"><span class="rank-num ${cls}">${icon}</span><span class="rank-machine">${machine}</span><span class="rank-value">${total.toLocaleString()}</span></div>`;
+            }).join('');
         }
-        rankMachineEl.innerHTML = machineHtml;
 
-        // 人员排名
-        const operatorMap = {};
-        filteredRows.forEach(row => {
-            const op = row.operator || '未指定';
-            const actual = parseFloat(row.actual) || 0;
-            const theory = Math.round(calcMinutes(row.startTime, row.endTime, row.rest, row.repair) * (parseFloat(row.speed) || 0));
-            if (!operatorMap[op]) operatorMap[op] = { total: 0, theory: 0 };
-            operatorMap[op].total += actual;
-            operatorMap[op].theory += theory;
-        });
-        const operatorSorted = Object.entries(operatorMap).map(([name, data]) => ({
-            name, total: data.total, eff: data.theory > 0 ? (data.total / data.theory * 100) : 0
-        })).sort((a, b) => b.eff - a.eff);
-
-        const rankOperatorEl = document.getElementById('rankOperator');
-        const operatorLabel = document.getElementById('operatorRankLabel');
-        let operatorHtml = '';
-        if (operatorSorted.length === 0) {
-            operatorHtml = '<div style="color:#6b7280;font-size:13px;">暂无数据</div>';
+        const rankBottomEl = document.getElementById('rankBottom');
+        if (bottom2.length === 0) {
+            rankBottomEl.innerHTML = '<div style="color:#6b7280;">暂无数据</div>';
         } else {
-            operatorLabel.textContent = '（按效率排序）';
-            operatorSorted.forEach((item, idx) => {
-                operatorHtml += `<div class="rank-item">
-                    <span class="rank-num">${idx + 1}</span>
-                    <span class="rank-name">${item.name}</span>
-                    <span class="rank-extra">产量 ${item.total.toLocaleString()}</span>
-                    <span class="rank-value">${item.eff.toFixed(1)}%</span>
-                </div>`;
-            });
+            rankBottomEl.innerHTML = bottom2.map(([machine, total], i) => {
+                const cls = 'rank-last';
+                const icon = i === 0 ? '⚠️' : '⚠️';
+                return `<div class="rank-item"><span class="rank-num ${cls}">${icon}</span><span class="rank-machine">${machine}</span><span class="rank-value">${total.toLocaleString()}</span></div>`;
+            }).reverse().join('');
         }
-        rankOperatorEl.innerHTML = operatorHtml;
     }
-    function updateSummaryAndRank() { updateSummary(); updateRanking(); }
 
-    // ============================================================
-    // 表格渲染
-    // ============================================================
+    // ==================== 表格渲染 ====================
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         let html = '';
         filteredRows.forEach((row, idx) => {
-            const originalIdx = rowsData.indexOf(row);
+            const originalIdx = rowsData.indexOf(row); // 实际索引
             const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
             const speed = parseFloat(row.speed) || 0;
             const theory = Math.round(minutes * speed);
@@ -795,9 +1134,19 @@
             html += `<tr>
                 <td><input type="date" value="${row.date||''}" onchange="updateRow(${originalIdx},'date',this.value)"></td>
                 <td><select onchange="onShiftChange(${originalIdx}, this.value)">${shiftOpts}</select></td>
-                <td><select onchange="onMachineChange(${originalIdx}, this.value)"><option value="">-- 选择 --</option>${machineOptionsStr}</select></td>
+                <td>
+                    <select onchange="onMachineChange(${originalIdx}, this.value)">
+                        <option value="">-- 选择 --</option>
+                        ${machineOptionsStr}
+                    </select>
+                </td>
                 <td><input type="text" value="${row.product||''}" onchange="updateRow(${originalIdx},'product',this.value)" placeholder="品名"></td>
-                <td><select onchange="updateRow(${originalIdx},'operator',this.value)"><option value="">-- 选择 --</option>${operatorOptionsStr}</select></td>
+                <td>
+                    <select onchange="updateRow(${originalIdx},'operator',this.value)">
+                        <option value="">-- 选择 --</option>
+                        ${operatorOptionsStr}
+                    </select>
+                </td>
                 <td><input type="time" value="${row.startTime||''}" onchange="updateRow(${originalIdx},'startTime',this.value)" ${isReadonly}></td>
                 <td><input type="time" value="${row.endTime||''}" onchange="updateRow(${originalIdx},'endTime',this.value)" ${isReadonly}></td>
                 <td><input type="number" value="${row.rest||0}" onchange="updateRow(${originalIdx},'rest',this.value)" step="1" min="0" style="width:70px;" ${isReadonly}></td>
@@ -813,141 +1162,106 @@
             </tr>`;
         });
         tbody.innerHTML = html;
+        // 更新汇总和排名
         updateSummaryAndRank();
+        saveData();
     }
 
-    // ============================================================
-    // 设置保存
-    // ============================================================
-    function saveSettings() {
-        defaultSettings.day.start = document.getElementById('dayStart').value || '08:00';
-        defaultSettings.day.end = document.getElementById('dayEnd').value || '17:00';
-        defaultSettings.day.rest = parseInt(document.getElementById('dayRest').value) || 0;
-        defaultSettings.night.start = document.getElementById('nightStart').value || '20:00';
-        defaultSettings.night.end = document.getElementById('nightEnd').value || '05:00';
-        defaultSettings.night.rest = parseInt(document.getElementById('nightRest').value) || 0;
-        defaultSettings.season.start = document.getElementById('seasonStart').value || '09:00';
-        defaultSettings.season.end = document.getElementById('seasonEnd').value || '18:00';
-        defaultSettings.season.rest = parseInt(document.getElementById('seasonRest').value) || 0;
-        dbSet('shiftDefaults', defaultSettings);
-        alert('默认班次时间已保存！');
+    // ==================== 事件处理 ====================
+    function onShiftChange(idx, newShift) {
+        if (idx < 0 || idx >= rowsData.length) return;
+        rowsData[idx].shift = newShift;
+        if (newShift === '临时') {
+            if (!rowsData[idx].startTime) rowsData[idx].startTime = '08:00';
+            if (!rowsData[idx].endTime) rowsData[idx].endTime = '17:00';
+            if (rowsData[idx].rest === undefined || rowsData[idx].rest === '') rowsData[idx].rest = 0;
+            if (rowsData[idx].repair === undefined || rowsData[idx].repair === '') rowsData[idx].repair = 0;
+        } else {
+            const def = getDefaultTime(newShift);
+            if (def) {
+                rowsData[idx].startTime = def.start;
+                rowsData[idx].endTime = def.end;
+                rowsData[idx].rest = def.rest;
+                if (rowsData[idx].repair === undefined || rowsData[idx].repair === '') rowsData[idx].repair = 0;
+            }
+        }
+        // 重新过滤并渲染
+        applyFilterAndRender();
     }
 
-    // ============================================================
-    // 导入（需要加载 xlsx 库）
-    // ============================================================
-    function importExcel(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        loadXlsx(function() {
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                try {
-                    const data = new Uint8Array(ev.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
-                    if (!json.length) { alert('文件为空'); return; }
+    function onMachineChange(idx, newMachine) {
+        if (idx < 0 || idx >= rowsData.length) return;
+        rowsData[idx].machine = newMachine;
+        const speed = getMachineSpeed(newMachine);
+        if (speed !== null) {
+            rowsData[idx].speed = speed;
+        }
+        applyFilterAndRender();
+    }
 
-                    const headers = Object.keys(json[0]);
-                    const map = {
-                        'date': ['日期', 'date', '日'],
-                        'shift': ['班次', 'shift', '班'],
-                        'machine': ['机台号', '机台', 'machine', '设备'],
-                        'product': ['品名', '产品', 'product', '名称'],
-                        'operator': ['开机人员', '人员', 'operator', '姓名'],
-                        'startTime': ['开机', '上班', '开始', 'start'],
-                        'endTime': ['关机', '下班', '结束', 'end'],
-                        'rest': ['休息', '休息分钟', 'rest'],
-                        'repair': ['维修时长', '维修', '修理', 'repair', '停机'],
-                        'speed': ['速度', '车速', 'speed', '速率'],
-                        'actual': ['实际产量', '产量', '实际', 'actual']
-                    };
-                    const colMap = {};
-                    headers.forEach(h => {
-                        const trimmed = h.trim();
-                        for (let key in map) {
-                            if (map[key].some(k => trimmed.includes(k) || k.includes(trimmed))) {
-                                colMap[key] = h;
-                                break;
-                            }
-                        }
-                    });
-                    if (!colMap.date || !colMap.machine || !colMap.actual) {
-                        alert('导入失败：未找到必需的列（日期、机台号、实际产量）。');
-                        return;
-                    }
+    function updateRow(idx, field, value) {
+        if (idx < 0 || idx >= rowsData.length) return;
+        if (rowsData[idx].shift !== '临时') {
+            if (['startTime', 'endTime', 'rest', 'speed'].includes(field)) {
+                return;
+            }
+        }
+        if (['speed', 'actual', 'rest', 'repair'].includes(field)) {
+            rowsData[idx][field] = parseFloat(value) || 0;
+        } else {
+            rowsData[idx][field] = value;
+        }
+        applyFilterAndRender();
+    }
 
-                    let added = 0;
-                    json.forEach(row => {
-                        let dateVal = row[colMap.date];
-                        let dateStr = '';
-                        if (typeof dateVal === 'number') {
-                            try {
-                                const d = new Date((dateVal - 25569) * 86400 * 1000);
-                                dateStr = d.toISOString().split('T')[0];
-                            } catch (e) { dateStr = getTodayStr(); }
-                        } else {
-                            dateStr = String(dateVal || '').trim();
-                            if (dateStr) {
-                                const d = new Date(dateStr);
-                                if (!isNaN(d.getTime())) dateStr = d.toISOString().split('T')[0];
-                            }
-                        }
-                        if (!dateStr) dateStr = getTodayStr();
+    function deleteRow(idx) {
+        if (!confirm('确认删除此行？')) return;
+        rowsData.splice(idx, 1);
+        applyFilterAndRender();
+    }
 
-                        let shift = String(row[colMap.shift] || '').trim();
-                        if (!['白班', '夜班', '寒暑', '临时'].includes(shift)) shift = '临时';
-
-                        const machine = String(row[colMap.machine] || '').trim();
-                        const product = String(row[colMap.product] || '').trim();
-                        const operator = String(row[colMap.operator] || '').trim();
-                        const formatTime = (val) => {
-                            if (typeof val === 'number') {
-                                const totalMinutes = Math.round((val - Math.floor(val)) * 1440);
-                                const h = Math.floor(totalMinutes / 60);
-                                const m = totalMinutes % 60;
-                                return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
-                            }
-                            return String(val || '').trim();
-                        };
-                        const start = formatTime(row[colMap.startTime]) || '08:00';
-                        const end = formatTime(row[colMap.endTime]) || '17:00';
-                        const rest = parseFloat(row[colMap.rest]) || 0;
-                        const repair = parseFloat(row[colMap.repair]) || 0;
-                        const speed = parseFloat(row[colMap.speed]) || 0;
-                        const actual = parseFloat(row[colMap.actual]) || 0;
-
-                        rowsData.push({
-                            date: dateStr,
-                            shift: shift,
-                            machine: machine,
-                            product: product,
-                            operator: operator,
-                            startTime: start,
-                            endTime: end,
-                            rest: rest,
-                            repair: repair,
-                            speed: speed,
-                            actual: actual
-                        });
-                        added++;
-                    });
-                    saveRowsToDb();
-                    applyFilterAndRender();
-                    alert(`导入成功！共添加 ${added} 行。`);
-                } catch (err) {
-                    alert('导入失败：' + err.message);
-                }
-            };
-            reader.readAsArrayBuffer(file);
-            e.target.value = '';
+    function addRow() {
+        const def = getDefaultTime('白班');
+        rowsData.push({
+            date: getTodayStr(),
+            shift: '白班',
+            machine: '',
+            product: '',
+            operator: '',
+            startTime: def.start,
+            endTime: def.end,
+            rest: def.rest,
+            repair: 0,
+            speed: 100,
+            actual: 0
         });
+        applyFilterAndRender();
+        const tbody = document.getElementById('tableBody');
+        if (tbody) tbody.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // ============================================================
-    // 导出（纯 HTML 表格方式，无需外部库）
-    // ============================================================
+    function clearAll() {
+        if (!confirm('确定删除全部数据吗？')) return;
+        rowsData = [];
+        applyFilterAndRender();
+    }
+
+    // 应用当前筛选并重新渲染
+    function applyFilterAndRender() {
+        // 根据 currentFilter 重新生成 filteredRows
+        if (currentFilter.type === 'all') {
+            filteredRows = rowsData.slice();
+        } else if (currentFilter.type === 'day') {
+            filteredRows = rowsData.filter(row => row.date === currentFilter.value);
+        } else if (currentFilter.type === 'month') {
+            filteredRows = rowsData.filter(row => row.date && row.date.startsWith(currentFilter.value));
+        }
+        renderTable();
+        updateSummaryAndRank();
+        saveData();
+    }
+
+    // ==================== 导出对话框 ====================
     function showExportDialog() {
         if (rowsData.length === 0) {
             alert('没有数据可导出');
@@ -959,12 +1273,14 @@
             '点击「取消」导出全部数据（' + rowsData.length + ' 行）'
         );
         if (choice) {
+            // 导出当前筛选
             exportExcel(filteredRows);
         } else {
             exportExcel(rowsData);
         }
     }
 
+    // ==================== 导出（增强版，含排名信息） ====================
     function exportExcel(dataToExport) {
         if (dataToExport.length === 0) {
             alert('没有数据可导出');
@@ -984,23 +1300,19 @@
         const avgEff = sumTheory ? (sumActual / sumTheory * 100) : 0;
         const totalDiff = sumTheory - sumActual;
 
-        // 机台效率排名（用于报表）
-        const machineMap = {};
+        // 机台排名
+        const map = {};
         dataToExport.forEach(row => {
             const m = row.machine || '未知';
             const actual = parseFloat(row.actual) || 0;
-            const theory = Math.round(calcMinutes(row.startTime, row.endTime, row.rest, row.repair) * (parseFloat(row.speed) || 0));
-            if (!machineMap[m]) machineMap[m] = { total: 0, theory: 0 };
-            machineMap[m].total += actual;
-            machineMap[m].theory += theory;
+            if (map[m]) map[m] += actual;
+            else map[m] = actual;
         });
-        const machineSorted = Object.entries(machineMap).map(([name, data]) => ({
-            name, total: data.total, eff: data.theory > 0 ? (data.total / data.theory * 100) : 0
-        })).sort((a, b) => b.eff - a.eff);
-        const top3 = machineSorted.slice(0, 3);
-        const bottom3 = machineSorted.slice(-3);
+        const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+        const top2 = sorted.slice(0, 2);
+        const bottom2 = sorted.slice(-2);
 
-        // 构建表格 HTML
+        // 构建表格行
         let tableRows = '';
         dataToExport.forEach((row, idx) => {
             const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
@@ -1043,17 +1355,18 @@
             </tr>
         `;
 
+        // 排名信息行
         let rankRows = '';
-        if (top3.length) {
-            rankRows += `<tr><td colspan="17" style="border:1px solid #a0b3cc;padding:6px;font-weight:700;">🏆 机台效率前3名</td></tr>`;
-            top3.forEach((item, i) => {
-                rankRows += `<tr><td colspan="17" style="border:1px solid #a0b3cc;padding:6px;">${i+1}. ${item.name} — 效率 ${item.eff.toFixed(1)}% (产量 ${item.total.toLocaleString()})</td></tr>`;
+        if (top2.length) {
+            rankRows += `<tr><td colspan="17" style="border:1px solid #a0b3cc;padding:6px;font-weight:700;">🏆 机台产量排名（前2）</td></tr>`;
+            top2.forEach(([machine, total], i) => {
+                rankRows += `<tr><td colspan="17" style="border:1px solid #a0b3cc;padding:6px;">${i+1}. ${machine} — ${total.toLocaleString()}</td></tr>`;
             });
         }
-        if (bottom3.length) {
-            rankRows += `<tr><td colspan="17" style="border:1px solid #a0b3cc;padding:6px;font-weight:700;">⚠️ 机台效率后3名</td></tr>`;
-            bottom3.forEach((item, i) => {
-                rankRows += `<tr><td colspan="17" style="border:1px solid #a0b3cc;padding:6px;">${i+1}. ${item.name} — 效率 ${item.eff.toFixed(1)}% (产量 ${item.total.toLocaleString()})</td></tr>`;
+        if (bottom2.length) {
+            rankRows += `<tr><td colspan="17" style="border:1px solid #a0b3cc;padding:6px;font-weight:700;">⚠️ 机台产量排名（后2）</td></tr>`;
+            bottom2.forEach(([machine, total], i) => {
+                rankRows += `<tr><td colspan="17" style="border:1px solid #a0b3cc;padding:6px;">${i+1}. ${machine} — ${total.toLocaleString()}</td></tr>`;
             });
         }
 
@@ -1116,10 +1429,9 @@
         URL.revokeObjectURL(link.href);
     }
 
-    // ============================================================
-    // 下载模板（也使用 HTML 表格方式，无需外部库）
-    // ============================================================
+    // ==================== 导入导出（原有） ====================
     function downloadTemplate() {
+        const wb = XLSX.utils.book_new();
         const data = [
             ['日期', '班次', '机台号', '品名', '开机人员', '开机', '关机', '休息', '维修时长', '速度', '实际产量'],
             ['2026-07-25', '白班', '18', '8oz', '张三', '08:00', '17:00', 60, 0, 110, 50693],
@@ -1127,44 +1439,127 @@
             ['2026-07-25', '寒暑', '22', '12白色', '王五', '09:00', '18:00', 60, 10, 100, 62014],
             ['2026-07-25', '临时', '23', '7.5', '赵六', '10:00', '15:00', 30, 0, 90, 30000]
         ];
-
-        let rows = data.map(row => `<tr>${row.map(cell => `<td style="border:1px solid #a0b3cc;padding:6px;">${cell}</td>`).join('')}</tr>`).join('');
-
-        const html = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office"
-              xmlns:x="urn:schemas-microsoft-com:office:excel"
-              xmlns="http://www.w3.org/TR/REC-html40">
-        <head>
-            <meta charset="UTF-8">
-            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-            <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>模板</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
-            <style>
-                body { font-family: 'Microsoft YaHei', Arial, sans-serif; padding:20px; }
-                .report-title { font-size:20px; font-weight:700; text-align:center; margin-bottom:10px; }
-                table { border-collapse:collapse; width:100%; font-size:12px; }
-                th { background:#1e3a8a; color:#ffffff; font-weight:700; border:1px solid #1e3a8a; padding:8px 6px; text-align:center; }
-                td { border:1px solid #a0b3cc; padding:6px; text-align:center; }
-            </style>
-        </head>
-        <body>
-            <div class="report-title">日报导入模板</div>
-            <table><thead><tr>${data[0].map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
-        </body>
-        </html>`;
-
-        const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        ws['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 14 }];
+        XLSX.utils.book_append_sheet(wb, ws, '模板');
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/octet-stream' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = '日报导入模板.xls';
+        link.download = '日报导入模板.xlsx';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(link.href);
     }
 
-    // ============================================================
-    // 初始化
-    // ============================================================
+    function importExcel(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            try {
+                const data = new Uint8Array(ev.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+                if (!json.length) { alert('文件为空'); return; }
+
+                const headers = Object.keys(json[0]);
+                const map = {
+                    'date': ['日期', 'date', '日'],
+                    'shift': ['班次', 'shift', '班'],
+                    'machine': ['机台号', '机台', 'machine', '设备'],
+                    'product': ['品名', '产品', 'product', '名称'],
+                    'operator': ['开机人员', '人员', 'operator', '姓名'],
+                    'startTime': ['开机', '上班', '开始', 'start'],
+                    'endTime': ['关机', '下班', '结束', 'end'],
+                    'rest': ['休息', '休息分钟', 'rest'],
+                    'repair': ['维修时长', '维修', '修理', 'repair', '停机'],
+                    'speed': ['速度', '车速', 'speed', '速率'],
+                    'actual': ['实际产量', '产量', '实际', 'actual']
+                };
+                const colMap = {};
+                headers.forEach(h => {
+                    const trimmed = h.trim();
+                    for (let key in map) {
+                        if (map[key].some(k => trimmed.includes(k) || k.includes(trimmed))) {
+                            colMap[key] = h;
+                            break;
+                        }
+                    }
+                });
+                if (!colMap.date || !colMap.machine || !colMap.actual) {
+                    alert('导入失败：未找到必需的列（日期、机台号、实际产量）。');
+                    return;
+                }
+
+                let added = 0;
+                json.forEach(row => {
+                    let dateVal = row[colMap.date];
+                    let dateStr = '';
+                    if (typeof dateVal === 'number') {
+                        try {
+                            const d = new Date((dateVal - 25569) * 86400 * 1000);
+                            dateStr = d.toISOString().split('T')[0];
+                        } catch (e) { dateStr = getTodayStr(); }
+                    } else {
+                        dateStr = String(dateVal || '').trim();
+                        if (dateStr) {
+                            const d = new Date(dateStr);
+                            if (!isNaN(d.getTime())) dateStr = d.toISOString().split('T')[0];
+                        }
+                    }
+                    if (!dateStr) dateStr = getTodayStr();
+
+                    let shift = String(row[colMap.shift] || '').trim();
+                    if (!['白班', '夜班', '寒暑', '临时'].includes(shift)) shift = '临时';
+
+                    const machine = String(row[colMap.machine] || '').trim();
+                    const product = String(row[colMap.product] || '').trim();
+                    const operator = String(row[colMap.operator] || '').trim();
+                    const formatTime = (val) => {
+                        if (typeof val === 'number') {
+                            const totalMinutes = Math.round((val - Math.floor(val)) * 1440);
+                            const h = Math.floor(totalMinutes / 60);
+                            const m = totalMinutes % 60;
+                            return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                        }
+                        return String(val || '').trim();
+                    };
+                    const start = formatTime(row[colMap.startTime]) || '08:00';
+                    const end = formatTime(row[colMap.endTime]) || '17:00';
+                    const rest = parseFloat(row[colMap.rest]) || 0;
+                    const repair = parseFloat(row[colMap.repair]) || 0;
+                    const speed = parseFloat(row[colMap.speed]) || 0;
+                    const actual = parseFloat(row[colMap.actual]) || 0;
+
+                    rowsData.push({
+                        date: dateStr,
+                        shift: shift,
+                        machine: machine,
+                        product: product,
+                        operator: operator,
+                        startTime: start,
+                        endTime: end,
+                        rest: rest,
+                        repair: repair,
+                        speed: speed,
+                        actual: actual
+                    });
+                    added++;
+                });
+                applyFilterAndRender();
+                alert(`导入成功！共添加 ${added} 行。`);
+            } catch (err) {
+                alert('导入失败：' + err.message);
+            }
+        };
+        reader.readAsArrayBuffer(file);
+        e.target.value = '';
+    }
+
+    // ==================== 初始化 ====================
     document.getElementById('todayLabel').textContent = getTodayStr();
     loadAll();
 </script>
