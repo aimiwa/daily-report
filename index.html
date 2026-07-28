@@ -4,209 +4,388 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>新森元生产日报统计表</title>
-    <!-- Firebase SDK（使用国内 CDN 加速） -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
-        /* 样式与之前完全一致（此处省略，请从之前的完整代码中复制） */
-        /* 为避免重复，建议您直接使用下方完整代码，或仅修改现有代码的脚本部分 */
+        /* ===== 基本样式（精简但完整） ===== */
+        * { box-sizing: border-box; font-family: "Microsoft YaHei", sans-serif; }
+        body { background: #eef2f7; margin: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #1e3a8a; padding-bottom: 10px; flex-wrap: wrap; }
+        .header h1 { font-size: 22px; margin: 0; }
+        .header h1 small { font-size: 14px; font-weight: 400; color: #3b5a8a; }
+        .btn { border: none; padding: 6px 14px; border-radius: 4px; font-size: 13px; cursor: pointer; background: #1e3a8a; color: #fff; }
+        .btn-success { background: #0f7b3a; }
+        .btn-danger { background: #b91c1c; }
+        .btn-outline { background: #fff; color: #1e3a8a; border: 1px solid #1e3a8a; }
+        .sync-status { font-size: 14px; color: #0b642e; margin-left: 10px; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; background: #f8fafd; padding: 12px; border-radius: 8px; margin: 12px 0; }
+        .summary-item .label { font-size: 12px; color: #546a84; }
+        .summary-item .value { font-size: 20px; font-weight: 700; }
+        .table-wrap { overflow-x: auto; border: 1px solid #dde3ed; border-radius: 6px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #e9edf4; padding: 8px; border: 1px solid #cbd5e1; text-align: center; }
+        td { padding: 6px; border: 1px solid #cbd5e1; text-align: center; }
+        td input, td select { width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 4px; }
+        td input[readonly] { background: #f4f6f9; }
+        .footer-tip { margin-top: 16px; font-size: 13px; color: #546a84; text-align: right; }
+        @media (max-width: 600px) { .container { padding: 12px; } .header h1 { font-size: 18px; } }
     </style>
 </head>
 <body>
-    <!-- 页面结构不变 -->
-    <!-- ... -->
+<div class="container">
+    <div class="header">
+        <h1>📋 新森元生产日报统计表 <small>安徽新森元环保科技有限公司</small>
+            <span class="sync-status" id="syncStatus">☁️ 连接中...</span>
+        </h1>
+        <div>
+            <button class="btn btn-success" onclick="showExportDialog()">📥 导出报表</button>
+            <button class="btn" onclick="addRow()">➕ 添加行</button>
+            <button class="btn btn-danger" onclick="clearAll()">🗑️ 清空</button>
+        </div>
+    </div>
 
-    <script>
-        // ============================================================
-        // 🔥 Firebase 配置（请替换为您的配置）
-        // ============================================================
-        const firebaseConfig = {
-            appId: "1:123456789012:web:abcdef123456"
-            apiKey: "AIzaSyCiYlPVGVqg0T9UfylHEPRdb3-iJK4AiOk",
-            authDomain: "aimiwa-c66ff.firebaseapp.com",
-            databaseURL: "https://aimiwa-c66ff-default-rtdb.firebaseio.com",
-            projectId: "aimiwa-c66ff",
-            storageBucket: "aimiwa-c66ff.firebasestorage.app",
-            messagingSenderId: "937723915233",
-            appId: "1:937723915233:web:305e42ddcbeaa2a04b80a0",
-            measurementId: "G-KZEW7349QJ"
-        };
+    <!-- 汇总卡片 -->
+    <div class="summary-grid">
+        <div class="summary-item"><span class="label">📦 总实际产量</span><span class="value" id="sumActual">0</span></div>
+        <div class="summary-item"><span class="label">📐 总理论产量</span><span class="value" id="sumTheory">0</span></div>
+        <div class="summary-item"><span class="label">📈 平均效率</span><span class="value" id="avgEff">0%</span></div>
+        <div class="summary-item"><span class="label">✅ 达标行数</span><span class="value" id="cntPass">0</span></div>
+    </div>
 
-        // 初始化 Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    <!-- 表格 -->
+    <div class="table-wrap">
+        <table>
+            <thead><tr>
+                <th style="min-width:80px;">日期</th>
+                <th style="min-width:60px;">班次</th>
+                <th style="min-width:50px;">机台</th>
+                <th style="min-width:80px;">品名</th>
+                <th style="min-width:60px;">开机</th>
+                <th style="min-width:60px;">关机</th>
+                <th style="min-width:50px;">休息</th>
+                <th style="min-width:50px;">维修</th>
+                <th style="min-width:60px;">运行</th>
+                <th style="min-width:50px;">速度</th>
+                <th style="min-width:70px;">理论</th>
+                <th style="min-width:70px;">实际</th>
+                <th style="min-width:50px;">效率</th>
+                <th style="min-width:50px;">状态</th>
+                <th style="min-width:30px;">操作</th>
+            </tr></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+    <div class="footer-tip">💡 数据自动同步至云端，多设备共享</div>
+</div>
 
-        // ============================================================
-        // 数据路径
-        // ============================================================
-        const DB_PATHS = {
-            settings: 'settings',
-            machines: 'machines',
-            operators: 'operators',
-            rows: 'rows'
-        };
+<script>
+    // ============================================================
+    // 🔥 您的 Firebase 配置（已修正）
+    // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyCiYlPVGVqg0T9UfylHEPRdb3-iJK4AiOk",
+        authDomain: "aimiwa-c66ff.firebaseapp.com",
+        databaseURL: "https://aimiwa-c66ff-default-rtdb.firebaseio.com",
+        projectId: "aimiwa-c66ff",
+        storageBucket: "aimiwa-c66ff.firebasestorage.app",
+        messagingSenderId: "937723915233",
+        appId: "1:937723915233:web:305e42ddcbeaa2a04b80a0",
+        measurementId: "G-KZEW7349QJ"
+    };
 
-        // ============================================================
-        // 全局变量（与之前相同）
-        // ============================================================
-        let rowsData = [], machineList = [], operatorList = [];
-        let defaultSettings = {
-            day: { start: '08:00', end: '17:00', rest: 60 },
-            night: { start: '20:00', end: '05:00', rest: 30 },
-            season: { start: '09:00', end: '18:00', rest: 60 }
-        };
-        let currentFilter = { type: 'all', value: null };
-        let filteredRows = [];
-        let isSyncing = false;
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-        // ============================================================
-        // 工具函数（与之前相同）
-        // ============================================================
-        function getTodayStr() { /* ... */ }
-        function parseTimeToMinutes(str) { /* ... */ }
-        function calcMinutes(startStr, endStr, restMinutes, repairMinutes) { /* ... */ }
-        function sortByPinyin(arr) { /* ... */ }
-
-        // ============================================================
-        // 数据读写函数（替换 localStorage 为 Firebase）
-        // ============================================================
-
-        // 读取所有数据（首次加载）
-        function loadAllFromFirebase() {
-            const promises = [
-                db.ref(DB_PATHS.settings).once('value'),
-                db.ref(DB_PATHS.machines).once('value'),
-                db.ref(DB_PATHS.operators).once('value'),
-                db.ref(DB_PATHS.rows).once('value')
-            ];
-            Promise.all(promises).then(results => {
-                // 设置
-                const settingsSnap = results[0];
-                if (settingsSnap.exists()) {
-                    defaultSettings = settingsSnap.val();
-                    applySettingsToUI();
-                }
-                // 机台
-                const machinesSnap = results[1];
-                if (machinesSnap.exists()) {
-                    machineList = machinesSnap.val();
-                    renderMachineList();
-                }
-                // 人员
-                const operatorsSnap = results[2];
-                if (operatorsSnap.exists()) {
-                    operatorList = sortByPinyin(operatorsSnap.val());
-                    renderOperatorList();
-                }
-                // 日报
-                const rowsSnap = results[3];
-                if (rowsSnap.exists()) {
-                    rowsData = rowsSnap.val();
-                }
-                if (!rowsData || !rowsData.length) {
-                    // 初始化示例数据
-                    rowsData = [
-                        { date: '2026-07-24', shift: '白班', machine: '18', product: '8oz', operator: '张三', startTime: '08:00', endTime: '17:00', rest: 60, repair: 0, speed: 110, actual: 50693 },
-                        { date: '2026-07-24', shift: '夜班', machine: '18', product: '8oz', operator: '李四', startTime: '20:00', endTime: '05:00', rest: 30, repair: 15, speed: 110, actual: 48000 },
-                        { date: '2026-07-25', shift: '寒暑', machine: '22', product: '12白色', operator: '王五', startTime: '09:00', endTime: '18:00', rest: 60, repair: 10, speed: 100, actual: 62014 },
-                        { date: '2026-07-25', shift: '临时', machine: '23', product: '7.5', operator: '赵六', startTime: '10:00', endTime: '15:00', rest: 30, repair: 0, speed: 90, actual: 30000 }
-                    ];
-                    saveRowsToFirebase();
-                }
-                // 应用查询和渲染
-                applyQuery();
-                // 开启实时监听
-                startRealtimeSync();
-            }).catch(err => {
-                console.error('加载数据失败', err);
-                alert('无法连接数据库，请检查网络或配置。');
-            });
+    // ============================================================
+    // 工具函数
+    // ============================================================
+    function getTodayStr() {
+        const d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+    function parseTimeToMinutes(str) {
+        if (!str) return null;
+        const parts = str.split(':');
+        if (parts.length === 2) {
+            let h = parseInt(parts[0]), m = parseInt(parts[1]);
+            if (!isNaN(h) && !isNaN(m) && h>=0 && h<=23 && m>=0 && m<=59) return h*60 + m;
         }
+        return null;
+    }
+    function calcMinutes(startStr, endStr, rest, repair) {
+        const s = parseTimeToMinutes(startStr);
+        const e = parseTimeToMinutes(endStr);
+        if (s === null || e === null) return 0;
+        let diff = e - s;
+        if (diff < 0) diff += 1440;
+        diff -= (parseInt(rest) || 0);
+        diff -= (parseInt(repair) || 0);
+        return Math.max(0, diff);
+    }
+    function sortByPinyin(arr) {
+        return arr.slice().sort((a,b) => a.localeCompare(b, 'zh-Hans-CN'));
+    }
 
-        // 保存各个数据到 Firebase
-        function saveSettingsToFirebase() { db.ref(DB_PATHS.settings).set(defaultSettings); }
-        function saveMachinesToFirebase() { db.ref(DB_PATHS.machines).set(machineList); }
-        function saveOperatorsToFirebase() { db.ref(DB_PATHS.operators).set(operatorList); }
-        function saveRowsToFirebase() { db.ref(DB_PATHS.rows).set(rowsData); }
+    // ============================================================
+    // 全局变量
+    // ============================================================
+    let rowsData = [];
+    let machineList = [{id:'18',speed:110}, {id:'22',speed:100}];
+    let operatorList = ['张三','李四','王五'];
+    let defaultSettings = {
+        day: { start: '08:00', end: '17:00', rest: 60 },
+        night: { start: '20:00', end: '05:00', rest: 30 },
+        season: { start: '09:00', end: '18:00', rest: 60 }
+    };
+    let currentFilter = { type: 'all', value: null };
+    let filteredRows = [];
+    let isSyncing = false;
+    const DB_PATHS = { settings: 'settings', machines: 'machines', operators: 'operators', rows: 'rows' };
 
-        // 统一保存（每次修改后调用）
-        function saveAllToFirebase() {
+    // ============================================================
+    // UI 同步函数
+    // ============================================================
+    function applySettingsToUI() {
+        // 仅演示，实际可显示设置面板
+    }
+
+    function renderMachineList() {
+        // 简单显示，忽略
+    }
+
+    function renderOperatorList() {
+        // 简单显示，忽略
+    }
+
+    function getDefaultTime(shift) {
+        const s = shift.trim();
+        if (s === '夜班') return defaultSettings.night;
+        if (s === '白班') return defaultSettings.day;
+        if (s === '寒暑') return defaultSettings.season;
+        return null;
+    }
+
+    // ============================================================
+    // Firebase 读写
+    // ============================================================
+    function loadAllFromFirebase() {
+        document.getElementById('syncStatus').textContent = '☁️ 加载中...';
+        Promise.all([
+            db.ref(DB_PATHS.settings).once('value'),
+            db.ref(DB_PATHS.machines).once('value'),
+            db.ref(DB_PATHS.operators).once('value'),
+            db.ref(DB_PATHS.rows).once('value')
+        ]).then(results => {
+            if (results[0].exists()) defaultSettings = results[0].val();
+            if (results[1].exists()) machineList = results[1].val();
+            if (results[2].exists()) operatorList = sortByPinyin(results[2].val());
+            if (results[3].exists()) rowsData = results[3].val();
+            if (!rowsData || !rowsData.length) {
+                rowsData = [
+                    { date: getTodayStr(), shift: '白班', machine: '18', product: '8oz', operator: '张三', startTime: '08:00', endTime: '17:00', rest: 60, repair: 0, speed: 110, actual: 50693 },
+                    { date: getTodayStr(), shift: '夜班', machine: '22', product: '12白色', operator: '李四', startTime: '20:00', endTime: '05:00', rest: 30, repair: 15, speed: 100, actual: 48000 }
+                ];
+                db.ref(DB_PATHS.rows).set(rowsData);
+            }
+            filteredRows = rowsData.slice();
+            renderTable();
+            updateSummary();
+            document.getElementById('syncStatus').textContent = '☁️ 已连接';
+            startRealtimeSync();
+        }).catch(err => {
+            document.getElementById('syncStatus').textContent = '⚠️ 连接失败';
+            alert('连接数据库失败：' + err.message);
+        });
+    }
+
+    function saveRowsToFirebase() { db.ref(DB_PATHS.rows).set(rowsData); }
+
+    function startRealtimeSync() {
+        db.ref(DB_PATHS.rows).on('value', snapshot => {
             if (isSyncing) return;
-            saveSettingsToFirebase();
-            saveMachinesToFirebase();
-            saveOperatorsToFirebase();
-            saveRowsToFirebase();
+            const val = snapshot.val();
+            if (val && Array.isArray(val)) {
+                isSyncing = true;
+                rowsData = val;
+                filteredRows = rowsData.slice();
+                renderTable();
+                updateSummary();
+                isSyncing = false;
+            }
+        });
+    }
+
+    // ============================================================
+    // 表格渲染
+    // ============================================================
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        let html = '';
+        filteredRows.forEach((row, idx) => {
+            const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
+            const speed = parseFloat(row.speed) || 0;
+            const theory = Math.round(minutes * speed);
+            const actual = parseFloat(row.actual) || 0;
+            const eff = theory ? (actual / theory * 100) : 0;
+            let status = eff >= 95 ? '✅达标' : (eff >= 80 ? '⚠️偏低' : '❌欠产');
+            if (theory === 0 && actual === 0) status = '⏸️待产';
+            const readonly = (row.shift !== '临时') ? 'readonly' : '';
+            html += `<tr>
+                <td><input type="date" value="${row.date||''}" onchange="updateRow(${idx},'date',this.value)"></td>
+                <td>
+                    <select onchange="updateRow(${idx},'shift',this.value)">
+                        ${['白班','夜班','寒暑','临时'].map(s => `<option value="${s}" ${row.shift===s?'selected':''}>${s}</option>`).join('')}
+                    </select>
+                </td>
+                <td><input type="text" value="${row.machine||''}" onchange="updateRow(${idx},'machine',this.value)" placeholder="机台"></td>
+                <td><input type="text" value="${row.product||''}" onchange="updateRow(${idx},'product',this.value)" placeholder="品名"></td>
+                <td><input type="time" value="${row.startTime||''}" onchange="updateRow(${idx},'startTime',this.value)" ${readonly}></td>
+                <td><input type="time" value="${row.endTime||''}" onchange="updateRow(${idx},'endTime',this.value)" ${readonly}></td>
+                <td><input type="number" value="${row.rest||0}" onchange="updateRow(${idx},'rest',this.value)" step="1" min="0" style="width:50px;" ${readonly}></td>
+                <td><input type="number" value="${row.repair||0}" onchange="updateRow(${idx},'repair',this.value)" step="1" min="0" style="width:50px;"></td>
+                <td><input type="number" readonly value="${minutes}" style="background:#f4f6f9;width:55px;"></td>
+                <td><input type="number" value="${row.speed||''}" onchange="updateRow(${idx},'speed',this.value)" step="1" min="0" style="width:50px;" ${readonly}></td>
+                <td><input type="number" readonly value="${theory}" style="background:#f4f6f9;width:65px;"></td>
+                <td><input type="number" value="${row.actual||''}" onchange="updateRow(${idx},'actual',this.value)" step="1" min="0" style="width:65px;"></td>
+                <td>${eff.toFixed(1)}%</td>
+                <td>${status}</td>
+                <td><button onclick="deleteRow(${idx})" style="color:red;border:none;background:transparent;font-size:18px;cursor:pointer;">✕</button></td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+    }
+
+    function updateRow(idx, field, value) {
+        if (idx < 0 || idx >= rowsData.length) return;
+        if (rowsData[idx].shift !== '临时') {
+            if (['startTime','endTime','rest','speed'].includes(field)) return;
         }
-
-        // 实时监听云端变化
-        function startRealtimeSync() {
-            db.ref(DB_PATHS.rows).on('value', snapshot => {
-                if (isSyncing) return;
-                const val = snapshot.val();
-                if (val && Array.isArray(val)) {
-                    isSyncing = true;
-                    rowsData = val;
-                    applyFilterAndRender();
-                    isSyncing = false;
-                }
-            });
-            db.ref(DB_PATHS.machines).on('value', snapshot => {
-                if (isSyncing) return;
-                const val = snapshot.val();
-                if (val && Array.isArray(val)) {
-                    isSyncing = true;
-                    machineList = val;
-                    renderMachineList();
-                    renderTable();
-                    isSyncing = false;
-                }
-            });
-            db.ref(DB_PATHS.operators).on('value', snapshot => {
-                if (isSyncing) return;
-                const val = snapshot.val();
-                if (val && Array.isArray(val)) {
-                    isSyncing = true;
-                    operatorList = sortByPinyin(val);
-                    renderOperatorList();
-                    renderTable();
-                    isSyncing = false;
-                }
-            });
-            db.ref(DB_PATHS.settings).on('value', snapshot => {
-                if (isSyncing) return;
-                const val = snapshot.val();
-                if (val) {
-                    isSyncing = true;
-                    defaultSettings = val;
-                    applySettingsToUI();
-                    renderTable();
-                    isSyncing = false;
-                }
-            });
+        if (['speed','actual','rest','repair'].includes(field)) {
+            rowsData[idx][field] = parseFloat(value) || 0;
+        } else {
+            rowsData[idx][field] = value;
         }
+        saveRowsToFirebase();
+        renderTable();
+        updateSummary();
+    }
 
-        // ============================================================
-        // 修改原有保存/加载函数
-        // ============================================================
-        // 将原 loadAll 替换为 loadAllFromFirebase
-        // 将原 saveAll 替换为 saveAllToFirebase
-        // 所有增删改操作后调用相应的 Firebase 保存函数
+    function deleteRow(idx) {
+        if (!confirm('确认删除？')) return;
+        rowsData.splice(idx, 1);
+        saveRowsToFirebase();
+        filteredRows = rowsData.slice();
+        renderTable();
+        updateSummary();
+    }
 
-        // 示例：修改 addMachine
-        function addMachine() {
-            // ...（原有逻辑）
-            saveMachinesToFirebase();
-        }
+    function addRow() {
+        const def = getDefaultTime('白班');
+        rowsData.push({
+            date: getTodayStr(),
+            shift: '白班',
+            machine: '',
+            product: '',
+            startTime: def.start,
+            endTime: def.end,
+            rest: def.rest,
+            repair: 0,
+            speed: 100,
+            actual: 0
+        });
+        saveRowsToFirebase();
+        filteredRows = rowsData.slice();
+        renderTable();
+        updateSummary();
+    }
 
-        // 其他函数同理（修改后保存对应数据）
+    function clearAll() {
+        if (!confirm('确定删除全部数据？')) return;
+        rowsData = [];
+        saveRowsToFirebase();
+        filteredRows = rowsData.slice();
+        renderTable();
+        updateSummary();
+    }
 
-        // ============================================================
-        // 其余函数（查询、渲染、导出等）与之前完全相同，无需改动
-        // ============================================================
+    // ============================================================
+    // 汇总
+    // ============================================================
+    function updateSummary() {
+        let sumActual = 0, sumTheory = 0, cntPass = 0;
+        filteredRows.forEach(row => {
+            const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
+            const theory = Math.round(minutes * (parseFloat(row.speed) || 0));
+            const actual = parseFloat(row.actual) || 0;
+            sumActual += actual;
+            sumTheory += theory;
+            if (theory > 0 && (actual / theory) >= 0.95) cntPass++;
+        });
+        document.getElementById('sumActual').textContent = sumActual.toLocaleString();
+        document.getElementById('sumTheory').textContent = sumTheory.toLocaleString();
+        const avgEff = sumTheory ? (sumActual / sumTheory * 100) : 0;
+        document.getElementById('avgEff').textContent = avgEff.toFixed(1) + '%';
+        document.getElementById('cntPass').textContent = cntPass;
+    }
 
-        // 初始化
-        document.getElementById('todayLabel').textContent = getTodayStr();
+    // ============================================================
+    // 导出（简单 HTML .xls）
+    // ============================================================
+    function showExportDialog() {
+        if (rowsData.length === 0) { alert('无数据'); return; }
+        exportExcel(rowsData);
+    }
+
+    function exportExcel(dataToExport) {
+        let tableRows = '';
+        dataToExport.forEach(row => {
+            const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
+            const theory = Math.round(minutes * (parseFloat(row.speed) || 0));
+            const actual = parseFloat(row.actual) || 0;
+            const eff = theory ? (actual / theory * 100) : 0;
+            let status = eff >= 95 ? '达标' : (eff >= 80 ? '偏低' : '欠产');
+            if (theory === 0 && actual === 0) status = '待产';
+            tableRows += `<tr>
+                <td>${row.date||''}</td><td>${row.shift||''}</td><td>${row.machine||''}</td><td>${row.product||''}</td>
+                <td>${row.startTime||''}</td><td>${row.endTime||''}</td><td>${row.rest||0}</td><td>${row.repair||0}</td>
+                <td>${minutes}</td><td>${row.speed||0}</td><td>${theory}</td><td>${actual}</td>
+                <td>${eff.toFixed(1)}%</td><td>${status}</td>
+            </tr>`;
+        });
+
+        const html = `
+        <html><head><meta charset="UTF-8"><style>
+            body { font-family: 'Microsoft YaHei'; padding:20px; }
+            .title { font-size:24px; font-weight:700; text-align:center; }
+            table { border-collapse:collapse; width:100%; font-size:12px; }
+            th { background:#1e3a8a; color:#fff; border:1px solid #1e3a8a; padding:6px; }
+            td { border:1px solid #a0b3cc; padding:6px; text-align:center; }
+        </style></head>
+        <body>
+            <div class="title">新森元生产日报统计表</div>
+            <div style="text-align:center;margin-bottom:12px;">导出日期：${getTodayStr()}</div>
+            <table><thead><tr><th>日期</th><th>班次</th><th>机台</th><th>品名</th><th>开机</th><th>关机</th><th>休息</th><th>维修</th><th>运行</th><th>速度</th><th>理论</th><th>实际</th><th>效率</th><th>状态</th></tr></thead>
+            <tbody>${tableRows}</tbody></table>
+        </body></html>`;
+
+        const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '生产日报.xls';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+    }
+
+    // ============================================================
+    // 初始化
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
         loadAllFromFirebase();
-    </script>
+    });
+</script>
 </body>
 </html>
