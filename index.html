@@ -101,7 +101,7 @@
     </style>
 </head>
 <body>
-<div id="loading"><div class="spinner"></div><span>处理中...</span></div>
+<div id="loading"><div class="spinner"></div><span>加载中...</span></div>
 <div class="container">
     <div class="header">
         <h1>📋 新森元生产日报统计表 <small>安徽新森元环保科技有限公司</small></h1>
@@ -202,8 +202,7 @@
         💡 修改任意数据自动保存。机台号下拉选择后自动带出速度，可手动调整。<br>
         🛠️ 「维修时长」输入后自动从运行分钟中扣除，使理论产量更精准。<br>
         🔒 仅「临时」班次允许修改开机/关机/休息/速度，其他班次自动填充且只读。<br>
-        📊 机台和人员均按效率排名，按日显示机台前3/后3，按月/全部显示全部。<br>
-        📥 导出报表为 HTML 格式，无需联网，直接生成 .xls 文件，Excel 可正常打开。
+        📊 机台和人员均按效率排名，按日显示机台前3/后3，按月/全部显示全部。
     </div>
 </div>
 
@@ -265,7 +264,7 @@
     let xlsxLoaded = false;
 
     // ============================================================
-    // 动态加载 xlsx 库（仅导入时需要，导出已改用 HTML 方式）
+    // 动态加载 xlsx 库（懒加载）
     // ============================================================
     function loadXlsx(callback) {
         if (xlsxLoaded) { callback(); return; }
@@ -279,7 +278,7 @@
         };
         script.onerror = function() {
             document.getElementById('loading').classList.remove('active');
-            alert('加载 Excel 库失败，导入功能暂时不可用，请检查网络或手动输入数据。');
+            alert('加载 Excel 库失败，请检查网络后重试。');
         };
         document.head.appendChild(script);
     }
@@ -737,8 +736,33 @@
     }
 
     // ============================================================
-    // 导入（需要加载 xlsx 库）
+    // 导入导出（懒加载）
     // ============================================================
+    function downloadTemplate() {
+        loadXlsx(function() {
+            const wb = XLSX.utils.book_new();
+            const data = [
+                ['日期', '班次', '机台号', '品名', '开机人员', '开机', '关机', '休息', '维修时长', '速度', '实际产量'],
+                ['2026-07-25', '白班', '18', '8oz', '张三', '08:00', '17:00', 60, 0, 110, 50693],
+                ['2026-07-25', '夜班', '18', '8oz', '李四', '20:00', '05:00', 30, 15, 110, 48000],
+                ['2026-07-25', '寒暑', '22', '12白色', '王五', '09:00', '18:00', 60, 10, 100, 62014],
+                ['2026-07-25', '临时', '23', '7.5', '赵六', '10:00', '15:00', 30, 0, 90, 30000]
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            ws['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 14 }];
+            XLSX.utils.book_append_sheet(wb, ws, '模板');
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = '日报导入模板.xlsx';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        });
+    }
+
     function importExcel(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -848,9 +872,6 @@
         });
     }
 
-    // ============================================================
-    // 导出（纯 HTML 表格方式，无需外部库）
-    // ============================================================
     function showExportDialog() {
         if (rowsData.length === 0) {
             alert('没有数据可导出');
@@ -873,196 +894,102 @@
             alert('没有数据可导出');
             return;
         }
-
-        // 计算汇总
-        let sumActual = 0, sumTheory = 0, cntPass = 0;
-        dataToExport.forEach(row => {
-            const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
-            const theory = Math.round(minutes * (parseFloat(row.speed) || 0));
-            const actual = parseFloat(row.actual) || 0;
-            sumActual += actual;
-            sumTheory += theory;
-            if (theory > 0 && (actual / theory) >= 0.95) cntPass++;
-        });
-        const avgEff = sumTheory ? (sumActual / sumTheory * 100) : 0;
-        const totalDiff = sumTheory - sumActual;
-
-        // 机台效率排名（用于报表）
-        const machineMap = {};
-        dataToExport.forEach(row => {
-            const m = row.machine || '未知';
-            const actual = parseFloat(row.actual) || 0;
-            const theory = Math.round(calcMinutes(row.startTime, row.endTime, row.rest, row.repair) * (parseFloat(row.speed) || 0));
-            if (!machineMap[m]) machineMap[m] = { total: 0, theory: 0 };
-            machineMap[m].total += actual;
-            machineMap[m].theory += theory;
-        });
-        const machineSorted = Object.entries(machineMap).map(([name, data]) => ({
-            name, total: data.total, eff: data.theory > 0 ? (data.total / data.theory * 100) : 0
-        })).sort((a, b) => b.eff - a.eff);
-        const top3 = machineSorted.slice(0, 3);
-        const bottom3 = machineSorted.slice(-3);
-
-        // 构建表格 HTML
-        let tableRows = '';
-        dataToExport.forEach((row, idx) => {
-            const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
-            const theory = Math.round(minutes * (parseFloat(row.speed) || 0));
-            const actual = parseFloat(row.actual) || 0;
-            const eff = theory ? (actual / theory * 100) : 0;
-            const diff = theory - actual;
-            let status = eff >= 95 ? '达标' : (eff >= 80 ? '偏低' : '欠产');
-            if (theory === 0 && actual === 0) status = '待产';
-            const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafd';
-            tableRows += `<tr style="background:${bg};">
-                <td style="border:1px solid #a0b3cc;padding:6px;">${row.date||''}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${row.shift||''}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${row.machine||''}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${row.product||''}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${row.operator||''}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${row.startTime||''}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${row.endTime||''}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${row.rest||0}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${row.repair||0}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${minutes}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${row.speed||0}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;font-weight:600;">${theory}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;font-weight:600;">${actual}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${eff.toFixed(1)}%</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;font-weight:600;">${diff}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${status}</td>
-            </tr>`;
-        });
-
-        const summaryRow = `
-            <tr style="background:#dce3f0;font-weight:700;">
-                <td colspan="10" style="border:1px solid #a0b3cc;padding:6px;text-align:right;">📊 合计 / 平均</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">—</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${sumTheory.toLocaleString()}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${sumActual.toLocaleString()}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${avgEff.toFixed(1)}%</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">${totalDiff.toLocaleString()}</td>
-                <td style="border:1px solid #a0b3cc;padding:6px;">达标 ${cntPass}行</td>
-            </tr>
-        `;
-
-        let rankRows = '';
-        if (top3.length) {
-            rankRows += `<tr><td colspan="17" style="border:1px solid #a0b3cc;padding:6px;font-weight:700;">🏆 机台效率前3名</td></tr>`;
-            top3.forEach((item, i) => {
-                rankRows += `<tr><td colspan="17" style="border:1px solid #a0b3cc;padding:6px;">${i+1}. ${item.name} — 效率 ${item.eff.toFixed(1)}% (产量 ${item.total.toLocaleString()})</td></tr>`;
+        loadXlsx(function() {
+            let sumActual = 0, sumTheory = 0, cntPass = 0;
+            dataToExport.forEach(row => {
+                const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
+                const theory = Math.round(minutes * (parseFloat(row.speed) || 0));
+                const actual = parseFloat(row.actual) || 0;
+                sumActual += actual;
+                sumTheory += theory;
+                if (theory > 0 && (actual / theory) >= 0.95) cntPass++;
             });
-        }
-        if (bottom3.length) {
-            rankRows += `<tr><td colspan="17" style="border:1px solid #a0b3cc;padding:6px;font-weight:700;">⚠️ 机台效率后3名</td></tr>`;
-            bottom3.forEach((item, i) => {
-                rankRows += `<tr><td colspan="17" style="border:1px solid #a0b3cc;padding:6px;">${i+1}. ${item.name} — 效率 ${item.eff.toFixed(1)}% (产量 ${item.total.toLocaleString()})</td></tr>`;
+            const avgEff = sumTheory ? (sumActual / sumTheory * 100) : 0;
+            const totalDiff = sumTheory - sumActual;
+
+            const machineMap = {};
+            dataToExport.forEach(row => {
+                const m = row.machine || '未知';
+                const actual = parseFloat(row.actual) || 0;
+                const theory = Math.round(calcMinutes(row.startTime, row.endTime, row.rest, row.repair) * (parseFloat(row.speed) || 0));
+                if (!machineMap[m]) machineMap[m] = { total: 0, theory: 0 };
+                machineMap[m].total += actual;
+                machineMap[m].theory += theory;
             });
-        }
+            const machineSorted = Object.entries(machineMap).map(([name, data]) => ({
+                name, total: data.total, eff: data.theory > 0 ? (data.total / data.theory * 100) : 0
+            })).sort((a, b) => b.eff - a.eff);
+            const top3 = machineSorted.slice(0, 3);
+            const bottom3 = machineSorted.slice(-3);
 
-        const dateRange = dataToExport.length ? (dataToExport[0]?.date||'') + ' 至 ' + (dataToExport[dataToExport.length-1]?.date||'') : '';
+            const rows = dataToExport.map(row => {
+                const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
+                const theory = Math.round(minutes * (parseFloat(row.speed) || 0));
+                const actual = parseFloat(row.actual) || 0;
+                const eff = theory ? (actual / theory * 100) : 0;
+                const diff = theory - actual;
+                let status = eff >= 95 ? '达标' : (eff >= 80 ? '偏低' : '欠产');
+                if (theory === 0 && actual === 0) status = '待产';
+                return [
+                    row.date || '',
+                    row.shift || '',
+                    row.machine || '',
+                    row.product || '',
+                    row.operator || '',
+                    row.startTime || '',
+                    row.endTime || '',
+                    row.rest || 0,
+                    row.repair || 0,
+                    minutes,
+                    row.speed || 0,
+                    theory,
+                    actual,
+                    eff.toFixed(1) + '%',
+                    diff,
+                    status
+                ];
+            });
 
-        const excelHtml = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office"
-              xmlns:x="urn:schemas-microsoft-com:office:excel"
-              xmlns="http://www.w3.org/TR/REC-html40">
-        <head>
-            <meta charset="UTF-8">
-            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-            <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>日报</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
-            <style>
-                body { font-family: 'Microsoft YaHei', Arial, sans-serif; padding:20px; }
-                .report-title { font-size:24px; font-weight:700; color:#0b1e4a; text-align:center; margin:0 0 4px 0; letter-spacing:2px; }
-                .report-sub { font-size:18px; font-weight:500; color:#1a3a6a; text-align:center; margin:0 0 8px 0; }
-                .report-meta { text-align:center; font-size:13px; color:#3b5a7a; margin-bottom:18px; }
-                table { border-collapse:collapse; width:100%; font-size:12px; font-family:'Microsoft YaHei',Arial,sans-serif; table-layout:auto; }
-                th { background:#1e3a8a; color:#ffffff; font-weight:700; border:1px solid #1e3a8a; padding:8px 6px; text-align:center; white-space:nowrap; }
-                td { border:1px solid #a0b3cc; padding:6px; text-align:center; word-wrap:break-word; white-space:normal; }
-                tr { height: auto; }
-                .footer-note { margin-top:16px; font-size:12px; color:#546a84; text-align:right; border-top:1px solid #cbd5e1; padding-top:10px; }
-            </style>
-        </head>
-        <body>
-            <div class="report-title">新森元生产日报统计表</div>
-            <div class="report-sub">安徽新森元环保科技有限公司</div>
-            <div class="report-meta">
-                导出日期：${getTodayStr()} ｜ 数据日期范围：${dateRange}
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>日期</th><th>班次</th><th>机台号</th><th>品名</th><th>开机人员</th>
-                        <th>开机</th><th>关机</th><th>休息</th><th>维修时长</th><th>运行分钟</th>
-                        <th>速度(个/分)</th><th>理论产量</th><th>实际产量</th>
-                        <th>效率</th><th>差额</th><th>状态</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${tableRows}
-                    ${summaryRow}
-                    ${rankRows}
-                </tbody>
-            </table>
-            <div class="footer-note">
-                注：运行分钟 = (关机-开机) - 休息 - 维修时长；效率 ≥95% 为达标；差额 = 理论产量 - 实际产量。
-            </div>
-        </body>
-        </html>`;
+            const headers = ['日期', '班次', '机台号', '品名', '开机人员', '开机', '关机', '休息', '维修时长', '运行分钟', '速度', '理论产量', '实际产量', '效率', '差额', '状态'];
+            const summaryRow = [
+                '📊 合计 / 平均', '', '', '', '', '', '', '', '', '',
+                '',
+                sumTheory,
+                sumActual,
+                avgEff.toFixed(1) + '%',
+                totalDiff,
+                '达标 ' + cntPass + ' 行'
+            ];
 
-        const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `新森元生产日报_${getTodayStr()}.xls`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-    }
+            const rankRows = [];
+            if (top3.length) {
+                rankRows.push(['🏆 机台效率前3名', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+                top3.forEach((item, i) => {
+                    rankRows.push([`${i+1}. ${item.name} — 效率 ${item.eff.toFixed(1)}% (产量 ${item.total.toLocaleString()})`, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+                });
+            }
+            if (bottom3.length) {
+                rankRows.push(['⚠️ 机台效率后3名', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+                bottom3.forEach((item, i) => {
+                    rankRows.push([`${i+1}. ${item.name} — 效率 ${item.eff.toFixed(1)}% (产量 ${item.total.toLocaleString()})`, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+                });
+            }
 
-    // ============================================================
-    // 下载模板（也使用 HTML 表格方式，无需外部库）
-    // ============================================================
-    function downloadTemplate() {
-        const data = [
-            ['日期', '班次', '机台号', '品名', '开机人员', '开机', '关机', '休息', '维修时长', '速度', '实际产量'],
-            ['2026-07-25', '白班', '18', '8oz', '张三', '08:00', '17:00', 60, 0, 110, 50693],
-            ['2026-07-25', '夜班', '18', '8oz', '李四', '20:00', '05:00', 30, 15, 110, 48000],
-            ['2026-07-25', '寒暑', '22', '12白色', '王五', '09:00', '18:00', 60, 10, 100, 62014],
-            ['2026-07-25', '临时', '23', '7.5', '赵六', '10:00', '15:00', 30, 0, 90, 30000]
-        ];
-
-        let rows = data.map(row => `<tr>${row.map(cell => `<td style="border:1px solid #a0b3cc;padding:6px;">${cell}</td>`).join('')}</tr>`).join('');
-
-        const html = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office"
-              xmlns:x="urn:schemas-microsoft-com:office:excel"
-              xmlns="http://www.w3.org/TR/REC-html40">
-        <head>
-            <meta charset="UTF-8">
-            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-            <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>模板</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
-            <style>
-                body { font-family: 'Microsoft YaHei', Arial, sans-serif; padding:20px; }
-                .report-title { font-size:20px; font-weight:700; text-align:center; margin-bottom:10px; }
-                table { border-collapse:collapse; width:100%; font-size:12px; }
-                th { background:#1e3a8a; color:#ffffff; font-weight:700; border:1px solid #1e3a8a; padding:8px 6px; text-align:center; }
-                td { border:1px solid #a0b3cc; padding:6px; text-align:center; }
-            </style>
-        </head>
-        <body>
-            <div class="report-title">日报导入模板</div>
-            <table><thead><tr>${data[0].map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
-        </body>
-        </html>`;
-
-        const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = '日报导入模板.xls';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
+            const allData = [headers, ...rows, summaryRow, ...rankRows];
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(allData);
+            ws['!cols'] = headers.map((_, i) => ({ wch: Math.min(Math.max(10, i===0?14:10), 20) }));
+            XLSX.utils.book_append_sheet(wb, ws, '日报');
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `新森元生产日报_${getTodayStr()}.xlsx`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        });
     }
 
     // ============================================================
