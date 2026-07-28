@@ -1,12 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
+<!-- saved from url=(0162)file:///C:/Users/Administrator/Desktop/%E6%97%A5%E6%8A%A5%E8%A1%A8/%E6%96%B0%E6%A3%AE%E5%85%83%E7%94%9F%E4%BA%A7%E6%97%A5%E6%8A%A5%E7%BB%9F%E8%AE%A1%E8%A1%A8.html -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>新森元生产日报统计表</title>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
         * { box-sizing: border-box; font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; }
         body { background: #eef2f7; margin: 20px; padding: 0; }
@@ -97,8 +94,6 @@
             .query-panel { flex-direction: column; align-items: stretch; }
             .batch-add { flex-wrap: wrap; }
         }
-        .sync-status { font-size: 13px; color: #0b642e; margin-left: 12px; }
-        .sync-status.offline { color: #b91c1c; }
         #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; justify-content: center; align-items: center; color: #fff; font-size: 18px; }
         #loading.active { display: flex; }
         #loading .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #1e3a8a; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-right: 16px; }
@@ -106,16 +101,14 @@
     </style>
 </head>
 <body>
-<div id="loading"><div class="spinner"></div><span>同步数据中...</span></div>
+<div id="loading"><div class="spinner"></div><span>处理中...</span></div>
 <div class="container">
     <div class="header">
-        <h1>📋 新森元生产日报统计表 <small>安徽新森元环保科技有限公司</small>
-            <span class="sync-status" id="syncStatus">☁️ 连接中...</span>
-        </h1>
+        <h1>📋 新森元生产日报统计表 <small>安徽新森元环保科技有限公司</small></h1>
         <div class="header-right">
             <button class="btn btn-outline btn-sm" onclick="downloadTemplate()">📄 模板</button>
             <div class="file-input-wrap">
-                <button class="btn btn-outline btn-sm" onclick="document.getElementById('fileInput').click()">📂 导入</button>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById(&#39;fileInput&#39;).click()">📂 导入</button>
                 <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;" onchange="importExcel(event)">
             </div>
             <button class="btn btn-success btn-sm" onclick="showExportDialog()">📥 导出报表</button>
@@ -126,7 +119,7 @@
             <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑️ 清空</button>
         </div>
     </div>
-    <div class="report-date">📅 报告日期：<span id="todayLabel"></span> ｜ 数据云端实时同步</div>
+    <div class="report-date">📅 报告日期：<span id="todayLabel">2026-07-29</span> ｜ 数据实时保存</div>
 
     <div class="query-panel">
         <label>📅 筛选方式：</label>
@@ -144,11 +137,36 @@
     <div class="dashboard-grid">
         <div class="dashboard-card">
             <h3>🏭 机台效率排名 <span id="machineRankLabel">（全部）</span></h3>
-            <div id="rankMachine"></div>
+            <div id="rankMachine"><div class="rank-item">
+                    <span class="rank-num rank-last">⚠️</span>
+                    <span class="rank-name">22</span>
+                    <span class="rank-extra">产量 62,014</span>
+                    <span class="rank-value">131.9%</span>
+                </div><div class="rank-item">
+                    <span class="rank-num rank-last">⚠️</span>
+                    <span class="rank-name">23</span>
+                    <span class="rank-extra">产量 30,000</span>
+                    <span class="rank-value">123.5%</span>
+                </div><div class="rank-item">
+                    <span class="rank-num rank-last">⚠️</span>
+                    <span class="rank-name">17</span>
+                    <span class="rank-extra">产量 50,693</span>
+                    <span class="rank-value">96.0%</span>
+                </div><div class="rank-item">
+                    <span class="rank-num rank-last">⚠️</span>
+                    <span class="rank-name">18</span>
+                    <span class="rank-extra">产量 48,000</span>
+                    <span class="rank-value">88.2%</span>
+                </div></div>
         </div>
         <div class="dashboard-card">
-            <h3>👤 人员效率排名 <span id="operatorRankLabel">（按效率）</span></h3>
-            <div id="rankOperator"></div>
+            <h3>👤 人员效率排名 <span id="operatorRankLabel">（按效率排序）</span></h3>
+            <div id="rankOperator"><div class="rank-item">
+                    <span class="rank-num">1</span>
+                    <span class="rank-name">未指定</span>
+                    <span class="rank-extra">产量 190,707</span>
+                    <span class="rank-value">106.8%</span>
+                </div></div>
         </div>
     </div>
 
@@ -166,7 +184,7 @@
 
     <div class="machine-panel">
         <span style="font-weight:600; color:#1a2a4a;">🛠️ 机台管理</span>
-        <div class="machine-list" id="machineList"></div>
+        <div class="machine-list" id="machineList"><span class="machine-item">18 (110) <span class="del-mac" onclick="deleteMachine(&#39;18&#39;)">✕</span></span><span class="machine-item">17 (110) <span class="del-mac" onclick="deleteMachine(&#39;17&#39;)">✕</span></span><span class="machine-item">22 (100) <span class="del-mac" onclick="deleteMachine(&#39;22&#39;)">✕</span></span><span class="machine-item">27 (100) <span class="del-mac" onclick="deleteMachine(&#39;27&#39;)">✕</span></span><span class="machine-item">1 (110) <span class="del-mac" onclick="deleteMachine(&#39;1&#39;)">✕</span></span><span class="machine-item">A (45) <span class="del-mac" onclick="deleteMachine(&#39;A&#39;)">✕</span></span><span class="machine-item">B (45) <span class="del-mac" onclick="deleteMachine(&#39;B&#39;)">✕</span></span></div>
         <div style="display:flex; gap:6px; align-items:center;">
             <input type="text" id="newMachine" placeholder="机台号" style="width:80px;">
             <input type="number" id="newSpeed" placeholder="速度" style="width:70px;" step="1" min="0">
@@ -177,7 +195,7 @@
 
     <div class="operator-panel">
         <span style="font-weight:600; color:#1a2a4a;">👤 开机人员管理</span>
-        <div class="operator-list" id="operatorList"></div>
+        <div class="operator-list" id="operatorList"><span class="operator-item">李四 <span class="del-op" onclick="deleteOperator(&#39;李四&#39;)">✕</span></span><span class="operator-item">王五 <span class="del-op" onclick="deleteOperator(&#39;王五&#39;)">✕</span></span><span class="operator-item">张三 <span class="del-op" onclick="deleteOperator(&#39;张三&#39;)">✕</span></span><span class="operator-item">赵六 <span class="del-op" onclick="deleteOperator(&#39;赵六&#39;)">✕</span></span></div>
         <div style="display:flex; gap:6px; align-items:center;">
             <input type="text" id="newOperator" placeholder="姓名" style="width:80px;">
             <button class="btn-add-op" onclick="addOperator()">添加</button>
@@ -185,11 +203,11 @@
     </div>
 
     <div class="summary-grid" id="summaryGrid">
-        <div class="summary-item"><span class="label">📦 总实际产量</span><span class="value" id="sumActual">0</span></div>
-        <div class="summary-item"><span class="label">📐 总理论产量</span><span class="value" id="sumTheory">0</span></div>
-        <div class="summary-item"><span class="label">📈 平均效率</span><span class="value" id="avgEff">0%</span></div>
-        <div class="summary-item"><span class="label">⚠️ 总差额</span><span class="value" id="sumDiff">0</span></div>
-        <div class="summary-item"><span class="label">✅ 达标行数 (≥95%)</span><span class="value" id="cntPass">0</span></div>
+        <div class="summary-item"><span class="label">📦 总实际产量</span><span class="value" id="sumActual">190,707</span></div>
+        <div class="summary-item"><span class="label">📐 总理论产量</span><span class="value" id="sumTheory">178,550</span></div>
+        <div class="summary-item"><span class="label">📈 平均效率</span><span class="value" id="avgEff">106.8%</span></div>
+        <div class="summary-item"><span class="label">⚠️ 总差额</span><span class="value" id="sumDiff">-12,157</span></div>
+        <div class="summary-item"><span class="label">✅ 达标行数 (≥95%)</span><span class="value" id="cntPass">3</span></div>
     </div>
 
     <div class="table-wrap">
@@ -202,35 +220,91 @@
                 <th style="min-width:90px;">实际产量</th><th style="min-width:60px;">效率</th><th style="min-width:80px;">差额</th>
                 <th style="min-width:70px;">状态</th><th style="min-width:40px;">操作</th>
             </tr></thead>
-            <tbody id="tableBody"></tbody>
+            <tbody id="tableBody"><tr>
+                <td><input type="date" value="2026-07-24" onchange="updateRow(0,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(0, this.value)"><option value="白班">白班</option><option value="夜班">夜班</option><option value="寒暑" selected="" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td><select onchange="onMachineChange(0, this.value)"><option value="">-- 选择 --</option><option value="18">18</option><option value="17" selected="">17</option><option value="22">22</option><option value="27">27</option><option value="1">1</option><option value="A">A</option><option value="B">B</option></select></td>
+                <td><input type="text" value="8oz" onchange="updateRow(0,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td><select onchange="updateRow(0,&#39;operator&#39;,this.value)"><option value="">-- 选择 --</option><option value="李四">李四</option><option value="王五">王五</option><option value="张三">张三</option><option value="赵六">赵六</option></select></td>
+                <td><input type="time" value="09:00" onchange="updateRow(0,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="18:00" onchange="updateRow(0,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="60" onchange="updateRow(0,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="0" onchange="updateRow(0,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="480" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="110" onchange="updateRow(0,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="52800" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="50693" onchange="updateRow(0,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>96.0%</td>
+                <td>2107</td>
+                <td><span class="status-badge badge-ok">✅ 达标 🌱</span></td>
+                <td><button class="row-del" onclick="deleteRow(0)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-24" onchange="updateRow(1,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(1, this.value)"><option value="白班">白班</option><option value="夜班" selected="">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td><select onchange="onMachineChange(1, this.value)"><option value="">-- 选择 --</option><option value="18" selected="">18</option><option value="17">17</option><option value="22">22</option><option value="27">27</option><option value="1">1</option><option value="A">A</option><option value="B">B</option></select></td>
+                <td><input type="text" value="8oz" onchange="updateRow(1,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td><select onchange="updateRow(1,&#39;operator&#39;,this.value)"><option value="">-- 选择 --</option><option value="李四">李四</option><option value="王五">王五</option><option value="张三">张三</option><option value="赵六">赵六</option></select></td>
+                <td><input type="time" value="20:00" onchange="updateRow(1,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="05:00" onchange="updateRow(1,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="30" onchange="updateRow(1,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="15" onchange="updateRow(1,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="495" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="110" onchange="updateRow(1,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="54450" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="48000" onchange="updateRow(1,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>88.2%</td>
+                <td>6450</td>
+                <td><span class="status-badge badge-warn">⚠️ 偏低</span></td>
+                <td><button class="row-del" onclick="deleteRow(1)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-25" onchange="updateRow(2,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(2, this.value)"><option value="白班">白班</option><option value="夜班">夜班</option><option value="寒暑" selected="" class="season-option">寒暑</option><option value="临时" class="temp-option">临时</option></select></td>
+                <td><select onchange="onMachineChange(2, this.value)"><option value="">-- 选择 --</option><option value="18">18</option><option value="17">17</option><option value="22" selected="">22</option><option value="27">27</option><option value="1">1</option><option value="A">A</option><option value="B">B</option></select></td>
+                <td><input type="text" value="12白色" onchange="updateRow(2,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td><select onchange="updateRow(2,&#39;operator&#39;,this.value)"><option value="">-- 选择 --</option><option value="李四">李四</option><option value="王五">王五</option><option value="张三">张三</option><option value="赵六">赵六</option></select></td>
+                <td><input type="time" value="09:00" onchange="updateRow(2,&#39;startTime&#39;,this.value)" readonly=""></td>
+                <td><input type="time" value="18:00" onchange="updateRow(2,&#39;endTime&#39;,this.value)" readonly=""></td>
+                <td><input type="number" value="60" onchange="updateRow(2,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" value="10" onchange="updateRow(2,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="470" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="100" onchange="updateRow(2,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;" readonly=""></td>
+                <td><input type="number" readonly="" value="47000" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="62014" onchange="updateRow(2,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>131.9%</td>
+                <td>-15014</td>
+                <td><span class="status-badge badge-ok">✅ 达标 🌱</span></td>
+                <td><button class="row-del" onclick="deleteRow(2)">✕</button></td>
+            </tr><tr>
+                <td><input type="date" value="2026-07-25" onchange="updateRow(3,&#39;date&#39;,this.value)"></td>
+                <td><select onchange="onShiftChange(3, this.value)"><option value="白班">白班</option><option value="夜班">夜班</option><option value="寒暑" class="season-option">寒暑</option><option value="临时" selected="" class="temp-option">临时</option></select></td>
+                <td><select onchange="onMachineChange(3, this.value)"><option value="">-- 选择 --</option><option value="18">18</option><option value="17">17</option><option value="22">22</option><option value="27">27</option><option value="1">1</option><option value="A">A</option><option value="B">B</option><option value="23" selected="">23</option></select></td>
+                <td><input type="text" value="7.5" onchange="updateRow(3,&#39;product&#39;,this.value)" placeholder="品名"></td>
+                <td><select onchange="updateRow(3,&#39;operator&#39;,this.value)"><option value="">-- 选择 --</option><option value="李四">李四</option><option value="王五">王五</option><option value="张三">张三</option><option value="赵六">赵六</option></select></td>
+                <td><input type="time" value="10:00" onchange="updateRow(3,&#39;startTime&#39;,this.value)"></td>
+                <td><input type="time" value="15:00" onchange="updateRow(3,&#39;endTime&#39;,this.value)"></td>
+                <td><input type="number" value="30" onchange="updateRow(3,&#39;rest&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" value="0" onchange="updateRow(3,&#39;repair&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="270" style="background:#f4f6f9;font-weight:600;width:70px;"></td>
+                <td><input type="number" value="90" onchange="updateRow(3,&#39;speed&#39;,this.value)" step="1" min="0" style="width:70px;"></td>
+                <td><input type="number" readonly="" value="24300" style="background:#f4f6f9;font-weight:600;width:90px;"></td>
+                <td><input type="number" value="30000" onchange="updateRow(3,&#39;actual&#39;,this.value)" step="1" min="0" style="width:90px;"></td>
+                <td>123.5%</td>
+                <td>-5700</td>
+                <td><span class="status-badge badge-ok">✅ 达标 🟡</span></td>
+                <td><button class="row-del" onclick="deleteRow(3)">✕</button></td>
+            </tr></tbody>
         </table>
     </div>
     <div class="footer-tip">
-        💡 修改任意数据自动同步。机台号下拉选择后自动带出速度。<br>
-        🔒 仅「临时」班次允许修改开机/关机/休息/速度。<br>
-        ☁️ 数据云端实时同步，多设备共享。
+        💡 修改任意数据自动保存。机台号下拉选择后自动带出速度，可手动调整。<br>
+        🛠️ 「维修时长」输入后自动从运行分钟中扣除，使理论产量更精准。<br>
+        🔒 仅「临时」班次允许修改开机/关机/休息/速度，其他班次自动填充且只读。<br>
+        📊 机台和人员均按效率排名，按日显示机台前3/后3，按月/全部显示全部。<br>
+        📥 导出报表为 HTML 格式，无需联网，直接生成 .xls 文件，Excel 可正常打开。
     </div>
 </div>
 
 <script>
-    // ============================================================
-    // 🔥 请将下方的 firebaseConfig 替换为您的完整配置（从 Firebase 控制台复制）
-    // 我已为您填好 databaseURL，其他字段需您补充
-    // ============================================================
-    const firebaseConfig = {
-        apiKey: "AIzaSyD-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx",  // 请替换
-        authDomain: "aimiwa-c66ff.firebaseapp.com",        // 请替换
-        databaseURL: "https://aimiwa-c66ff-default-rtdb.firebaseio.com",
-        projectId: "aimiwa-c66ff",                         // 请替换
-        storageBucket: "aimiwa-c66ff.appspot.com",         // 请替换
-        messagingSenderId: "123456789012",                 // 请替换
-        appId: "1:123456789012:web:abcdef123456"           // 请替换
-    };
-
-    // 初始化 Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
     // ============================================================
     // 工具函数
     // ============================================================
@@ -262,6 +336,19 @@
     }
 
     // ============================================================
+    // localStorage 封装
+    // ============================================================
+    function dbGet(key, defaultVal) {
+        try {
+            const val = localStorage.getItem(key);
+            return val ? JSON.parse(val) : defaultVal;
+        } catch (e) { return defaultVal; }
+    }
+    function dbSet(key, val) {
+        localStorage.setItem(key, JSON.stringify(val));
+    }
+
+    // ============================================================
     // 全局变量
     // ============================================================
     let rowsData = [], machineList = [], operatorList = [];
@@ -272,106 +359,70 @@
     };
     let currentFilter = { type: 'all', value: null };
     let filteredRows = [];
-    let isSyncing = false;
-    const DB_PATHS = { settings: 'settings', machines: 'machines', operators: 'operators', rows: 'rows' };
+    let xlsxLoaded = false;
 
     // ============================================================
-    // Firebase 数据读写
+    // 动态加载 xlsx 库（仅导入时需要，导出已改用 HTML 方式）
     // ============================================================
-    function loadAllFromFirebase() {
+    function loadXlsx(callback) {
+        if (xlsxLoaded) { callback(); return; }
         document.getElementById('loading').classList.add('active');
-        Promise.all([
-            db.ref(DB_PATHS.settings).once('value'),
-            db.ref(DB_PATHS.machines).once('value'),
-            db.ref(DB_PATHS.operators).once('value'),
-            db.ref(DB_PATHS.rows).once('value')
-        ]).then(results => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.2/xlsx.full.min.js';
+        script.onload = function() {
+            xlsxLoaded = true;
             document.getElementById('loading').classList.remove('active');
-            if (results[0].exists()) defaultSettings = results[0].val();
-            applySettingsToUI();
-            if (results[1].exists()) machineList = results[1].val();
-            renderMachineList();
-            if (results[2].exists()) operatorList = sortByPinyin(results[2].val());
-            renderOperatorList();
-            if (results[3].exists()) rowsData = results[3].val();
-            if (!rowsData || !rowsData.length) {
-                rowsData = [
-                    { date: '2026-07-24', shift: '白班', machine: '18', product: '8oz', operator: '张三', startTime: '08:00', endTime: '17:00', rest: 60, repair: 0, speed: 110, actual: 50693 },
-                    { date: '2026-07-24', shift: '夜班', machine: '18', product: '8oz', operator: '李四', startTime: '20:00', endTime: '05:00', rest: 30, repair: 15, speed: 110, actual: 48000 },
-                    { date: '2026-07-25', shift: '寒暑', machine: '22', product: '12白色', operator: '王五', startTime: '09:00', endTime: '18:00', rest: 60, repair: 10, speed: 100, actual: 62014 },
-                    { date: '2026-07-25', shift: '临时', machine: '23', product: '7.5', operator: '赵六', startTime: '10:00', endTime: '15:00', rest: 30, repair: 0, speed: 90, actual: 30000 }
-                ];
-                db.ref(DB_PATHS.rows).set(rowsData);
-            }
-            filteredRows = rowsData.slice();
-            renderTable();
-            updateSummaryAndRank();
-            document.getElementById('syncStatus').textContent = '☁️ 已连接';
-            startRealtimeSync();
-        }).catch(err => {
+            callback();
+        };
+        script.onerror = function() {
             document.getElementById('loading').classList.remove('active');
-            document.getElementById('syncStatus').textContent = '⚠️ 离线模式';
-            document.getElementById('syncStatus').className = 'sync-status offline';
-            alert('连接数据库失败，请检查网络和 Firebase 配置。');
-            // 尝试从本地缓存加载（如果有）
-            loadFromLocalCache();
-        });
-    }
-
-    function saveSettingsToFirebase() { db.ref(DB_PATHS.settings).set(defaultSettings); }
-    function saveMachinesToFirebase() { db.ref(DB_PATHS.machines).set(machineList); }
-    function saveOperatorsToFirebase() { db.ref(DB_PATHS.operators).set(operatorList); }
-    function saveRowsToFirebase() { db.ref(DB_PATHS.rows).set(rowsData); }
-
-    function startRealtimeSync() {
-        db.ref(DB_PATHS.rows).on('value', snapshot => {
-            if (isSyncing) return;
-            const val = snapshot.val();
-            if (val && Array.isArray(val)) {
-                isSyncing = true;
-                rowsData = val;
-                applyFilterAndRender();
-                isSyncing = false;
-            }
-        });
-        db.ref(DB_PATHS.machines).on('value', snapshot => {
-            if (isSyncing) return;
-            const val = snapshot.val();
-            if (val && Array.isArray(val)) {
-                isSyncing = true;
-                machineList = val;
-                renderMachineList();
-                renderTable();
-                isSyncing = false;
-            }
-        });
-        db.ref(DB_PATHS.operators).on('value', snapshot => {
-            if (isSyncing) return;
-            const val = snapshot.val();
-            if (val && Array.isArray(val)) {
-                isSyncing = true;
-                operatorList = sortByPinyin(val);
-                renderOperatorList();
-                renderTable();
-                isSyncing = false;
-            }
-        });
-        db.ref(DB_PATHS.settings).on('value', snapshot => {
-            if (isSyncing) return;
-            const val = snapshot.val();
-            if (val) {
-                isSyncing = true;
-                defaultSettings = val;
-                applySettingsToUI();
-                renderTable();
-                isSyncing = false;
-            }
-        });
+            alert('加载 Excel 库失败，导入功能暂时不可用，请检查网络或手动输入数据。');
+        };
+        document.head.appendChild(script);
     }
 
     // ============================================================
-    // UI 同步函数
+    // 数据加载与保存
     // ============================================================
+    function loadAll() {
+        const savedSettings = dbGet('shiftDefaults', null);
+        if (savedSettings) defaultSettings = savedSettings;
+        applySettingsToUI();
+
+        machineList = dbGet('machineList', []);
+        if (!machineList.length) {
+            machineList = [
+                { id: '18', speed: 110 }, { id: '17', speed: 110 },
+                { id: '22', speed: 100 }, { id: '27', speed: 100 },
+                { id: '1', speed: 110 }, { id: 'A', speed: 45 }, { id: 'B', speed: 45 }
+            ];
+            dbSet('machineList', machineList);
+        }
+        renderMachineList();
+
+        operatorList = dbGet('operatorList', []);
+        if (!operatorList.length) {
+            operatorList = ['张三', '李四', '王五', '赵六'];
+            dbSet('operatorList', operatorList);
+        }
+        operatorList = sortByPinyin(operatorList);
+        renderOperatorList();
+
+        rowsData = dbGet('dailyReportData', []);
+        if (!rowsData.length) {
+            rowsData = [
+                { date: '2026-07-24', shift: '白班', machine: '18', product: '8oz', operator: '张三', startTime: '08:00', endTime: '17:00', rest: 60, repair: 0, speed: 110, actual: 50693 },
+                { date: '2026-07-24', shift: '夜班', machine: '18', product: '8oz', operator: '李四', startTime: '20:00', endTime: '05:00', rest: 30, repair: 15, speed: 110, actual: 48000 },
+                { date: '2026-07-25', shift: '寒暑', machine: '22', product: '12白色', operator: '王五', startTime: '09:00', endTime: '18:00', rest: 60, repair: 10, speed: 100, actual: 62014 },
+                { date: '2026-07-25', shift: '临时', machine: '23', product: '7.5', operator: '赵六', startTime: '10:00', endTime: '15:00', rest: 30, repair: 0, speed: 90, actual: 30000 }
+            ];
+            dbSet('dailyReportData', rowsData);
+        }
+        filteredRows = rowsData.slice();
+        renderTable();
+        updateSummaryAndRank();
+    }
+
     function applySettingsToUI() {
         document.getElementById('dayStart').value = defaultSettings.day.start || '08:00';
         document.getElementById('dayEnd').value = defaultSettings.day.end || '17:00';
@@ -406,7 +457,7 @@
         if (isNaN(speed) || speed < 0) { alert('请输入有效速度'); return; }
         if (machineList.some(m => m.id === id)) { alert('该机台已存在'); return; }
         machineList.push({ id, speed });
-        saveMachinesToFirebase();
+        dbSet('machineList', machineList);
         renderMachineList();
         document.getElementById('newMachine').value = '';
         document.getElementById('newSpeed').value = '';
@@ -415,7 +466,7 @@
     function deleteMachine(id) {
         if (!confirm(`确定删除机台 ${id} 吗？`)) return;
         machineList = machineList.filter(m => m.id !== id);
-        saveMachinesToFirebase();
+        dbSet('machineList', machineList);
         renderMachineList();
         renderTable();
     }
@@ -438,7 +489,7 @@
         if (operatorList.includes(name)) { alert('该人员已存在'); return; }
         operatorList.push(name);
         operatorList = sortByPinyin(operatorList);
-        saveOperatorsToFirebase();
+        dbSet('operatorList', operatorList);
         renderOperatorList();
         document.getElementById('newOperator').value = '';
         renderTable();
@@ -446,7 +497,7 @@
     function deleteOperator(name) {
         if (!confirm(`确定删除人员 ${name} 吗？`)) return;
         operatorList = operatorList.filter(op => op !== name);
-        saveOperatorsToFirebase();
+        dbSet('operatorList', operatorList);
         renderOperatorList();
         renderTable();
     }
@@ -454,6 +505,8 @@
     // ============================================================
     // 日报数据操作
     // ============================================================
+    function saveRowsToDb() { dbSet('dailyReportData', rowsData); }
+
     function addRowsBatch() {
         const countInput = document.getElementById('batchCount');
         let count = parseInt(countInput.value) || 1;
@@ -475,20 +528,20 @@
                 actual: 0
             });
         }
-        saveRowsToFirebase();
+        saveRowsToDb();
         applyFilterAndRender();
         countInput.value = 1;
     }
     function deleteRow(idx) {
         if (!confirm('确认删除此行？')) return;
         rowsData.splice(idx, 1);
-        saveRowsToFirebase();
+        saveRowsToDb();
         applyFilterAndRender();
     }
     function clearAll() {
         if (!confirm('确定删除全部数据吗？')) return;
         rowsData = [];
-        saveRowsToFirebase();
+        saveRowsToDb();
         applyFilterAndRender();
     }
 
@@ -512,7 +565,7 @@
                 if (rowsData[idx].repair === undefined || rowsData[idx].repair === '') rowsData[idx].repair = 0;
             }
         }
-        saveRowsToFirebase();
+        saveRowsToDb();
         applyFilterAndRender();
     }
     function onMachineChange(idx, newMachine) {
@@ -520,7 +573,7 @@
         rowsData[idx].machine = newMachine;
         const speed = getMachineSpeed(newMachine);
         if (speed !== null) rowsData[idx].speed = speed;
-        saveRowsToFirebase();
+        saveRowsToDb();
         applyFilterAndRender();
     }
     function updateRow(idx, field, value) {
@@ -533,7 +586,7 @@
         } else {
             rowsData[idx][field] = value;
         }
-        saveRowsToFirebase();
+        saveRowsToDb();
         applyFilterAndRender();
     }
 
@@ -611,6 +664,7 @@
     function updateRanking() {
         const isDay = (currentFilter.type === 'day');
 
+        // 机台效率排名
         const machineMap = {};
         filteredRows.forEach(row => {
             const m = row.machine || '未知';
@@ -656,6 +710,7 @@
         }
         rankMachineEl.innerHTML = machineHtml;
 
+        // 人员排名
         const operatorMap = {};
         filteredRows.forEach(row => {
             const op = row.operator || '未指定';
@@ -774,19 +829,124 @@
         defaultSettings.season.start = document.getElementById('seasonStart').value || '09:00';
         defaultSettings.season.end = document.getElementById('seasonEnd').value || '18:00';
         defaultSettings.season.rest = parseInt(document.getElementById('seasonRest').value) || 0;
-        saveSettingsToFirebase();
-        alert('默认班次时间已保存并同步！');
+        dbSet('shiftDefaults', defaultSettings);
+        alert('默认班次时间已保存！');
     }
 
     // ============================================================
-    // 导入（需要加载 xlsx 库，这里简化直接调用原生方式）
+    // 导入（需要加载 xlsx 库）
     // ============================================================
     function importExcel(e) {
-        alert('导入功能需要加载 Excel 库，请使用本地版本或确保网络连接。');
+        const file = e.target.files[0];
+        if (!file) return;
+        loadXlsx(function() {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const data = new Uint8Array(ev.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+                    if (!json.length) { alert('文件为空'); return; }
+
+                    const headers = Object.keys(json[0]);
+                    const map = {
+                        'date': ['日期', 'date', '日'],
+                        'shift': ['班次', 'shift', '班'],
+                        'machine': ['机台号', '机台', 'machine', '设备'],
+                        'product': ['品名', '产品', 'product', '名称'],
+                        'operator': ['开机人员', '人员', 'operator', '姓名'],
+                        'startTime': ['开机', '上班', '开始', 'start'],
+                        'endTime': ['关机', '下班', '结束', 'end'],
+                        'rest': ['休息', '休息分钟', 'rest'],
+                        'repair': ['维修时长', '维修', '修理', 'repair', '停机'],
+                        'speed': ['速度', '车速', 'speed', '速率'],
+                        'actual': ['实际产量', '产量', '实际', 'actual']
+                    };
+                    const colMap = {};
+                    headers.forEach(h => {
+                        const trimmed = h.trim();
+                        for (let key in map) {
+                            if (map[key].some(k => trimmed.includes(k) || k.includes(trimmed))) {
+                                colMap[key] = h;
+                                break;
+                            }
+                        }
+                    });
+                    if (!colMap.date || !colMap.machine || !colMap.actual) {
+                        alert('导入失败：未找到必需的列（日期、机台号、实际产量）。');
+                        return;
+                    }
+
+                    let added = 0;
+                    json.forEach(row => {
+                        let dateVal = row[colMap.date];
+                        let dateStr = '';
+                        if (typeof dateVal === 'number') {
+                            try {
+                                const d = new Date((dateVal - 25569) * 86400 * 1000);
+                                dateStr = d.toISOString().split('T')[0];
+                            } catch (e) { dateStr = getTodayStr(); }
+                        } else {
+                            dateStr = String(dateVal || '').trim();
+                            if (dateStr) {
+                                const d = new Date(dateStr);
+                                if (!isNaN(d.getTime())) dateStr = d.toISOString().split('T')[0];
+                            }
+                        }
+                        if (!dateStr) dateStr = getTodayStr();
+
+                        let shift = String(row[colMap.shift] || '').trim();
+                        if (!['白班', '夜班', '寒暑', '临时'].includes(shift)) shift = '临时';
+
+                        const machine = String(row[colMap.machine] || '').trim();
+                        const product = String(row[colMap.product] || '').trim();
+                        const operator = String(row[colMap.operator] || '').trim();
+                        const formatTime = (val) => {
+                            if (typeof val === 'number') {
+                                const totalMinutes = Math.round((val - Math.floor(val)) * 1440);
+                                const h = Math.floor(totalMinutes / 60);
+                                const m = totalMinutes % 60;
+                                return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                            }
+                            return String(val || '').trim();
+                        };
+                        const start = formatTime(row[colMap.startTime]) || '08:00';
+                        const end = formatTime(row[colMap.endTime]) || '17:00';
+                        const rest = parseFloat(row[colMap.rest]) || 0;
+                        const repair = parseFloat(row[colMap.repair]) || 0;
+                        const speed = parseFloat(row[colMap.speed]) || 0;
+                        const actual = parseFloat(row[colMap.actual]) || 0;
+
+                        rowsData.push({
+                            date: dateStr,
+                            shift: shift,
+                            machine: machine,
+                            product: product,
+                            operator: operator,
+                            startTime: start,
+                            endTime: end,
+                            rest: rest,
+                            repair: repair,
+                            speed: speed,
+                            actual: actual
+                        });
+                        added++;
+                    });
+                    saveRowsToDb();
+                    applyFilterAndRender();
+                    alert(`导入成功！共添加 ${added} 行。`);
+                } catch (err) {
+                    alert('导入失败：' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            e.target.value = '';
+        });
     }
 
     // ============================================================
-    // 导出（HTML 表格方式）
+    // 导出（纯 HTML 表格方式，无需外部库）
     // ============================================================
     function showExportDialog() {
         if (rowsData.length === 0) {
@@ -811,6 +971,7 @@
             return;
         }
 
+        // 计算汇总
         let sumActual = 0, sumTheory = 0, cntPass = 0;
         dataToExport.forEach(row => {
             const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
@@ -823,6 +984,7 @@
         const avgEff = sumTheory ? (sumActual / sumTheory * 100) : 0;
         const totalDiff = sumTheory - sumActual;
 
+        // 机台效率排名（用于报表）
         const machineMap = {};
         dataToExport.forEach(row => {
             const m = row.machine || '未知';
@@ -838,6 +1000,7 @@
         const top3 = machineSorted.slice(0, 3);
         const bottom3 = machineSorted.slice(-3);
 
+        // 构建表格 HTML
         let tableRows = '';
         dataToExport.forEach((row, idx) => {
             const minutes = calcMinutes(row.startTime, row.endTime, row.rest, row.repair);
@@ -953,6 +1116,9 @@
         URL.revokeObjectURL(link.href);
     }
 
+    // ============================================================
+    // 下载模板（也使用 HTML 表格方式，无需外部库）
+    // ============================================================
     function downloadTemplate() {
         const data = [
             ['日期', '班次', '机台号', '品名', '开机人员', '开机', '关机', '休息', '维修时长', '速度', '实际产量'],
@@ -961,7 +1127,9 @@
             ['2026-07-25', '寒暑', '22', '12白色', '王五', '09:00', '18:00', 60, 10, 100, 62014],
             ['2026-07-25', '临时', '23', '7.5', '赵六', '10:00', '15:00', 30, 0, 90, 30000]
         ];
+
         let rows = data.map(row => `<tr>${row.map(cell => `<td style="border:1px solid #a0b3cc;padding:6px;">${cell}</td>`).join('')}</tr>`).join('');
+
         const html = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office"
               xmlns:x="urn:schemas-microsoft-com:office:excel"
@@ -969,6 +1137,7 @@
         <head>
             <meta charset="UTF-8">
             <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+            <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>模板</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
             <style>
                 body { font-family: 'Microsoft YaHei', Arial, sans-serif; padding:20px; }
                 .report-title { font-size:20px; font-weight:700; text-align:center; margin-bottom:10px; }
@@ -982,6 +1151,7 @@
             <table><thead><tr>${data[0].map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
         </body>
         </html>`;
+
         const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
@@ -996,7 +1166,7 @@
     // 初始化
     // ============================================================
     document.getElementById('todayLabel').textContent = getTodayStr();
-    loadAllFromFirebase();
+    loadAll();
 </script>
-</body>
-</html>
+
+</body></html>
